@@ -10,7 +10,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<Variant, string> = {
-  primary:   'bg-white text-black hover:bg-zinc-100 active:bg-zinc-200',
+  primary:   'bg-bol-yellow text-black hover:bg-[#e8d400] active:bg-[#d6c400]',
   secondary: 'bg-zinc-800 text-white hover:bg-zinc-700 active:bg-zinc-600 border border-zinc-700',
   danger:    'bg-red-600 text-white hover:bg-red-500 active:bg-red-700',
   ghost:     'bg-transparent text-zinc-400 hover:text-white hover:bg-zinc-800 active:bg-zinc-700',
@@ -40,7 +40,7 @@ export default function Button({
       disabled={disabled}
       className={[
         'inline-flex items-center justify-center gap-2 font-semibold transition-colors duration-100 touch-manipulation select-none',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-bol-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-black',
         variantClasses[variant],
         sizeClasses[size],
         fullWidth ? 'w-full' : '',

@@ -7,12 +7,19 @@
   --border:     #2a2a2a;
   --foreground: #ffffff;
   --muted:      #71717a;
+  /* Tricolor boliviana */
+  --bol-red:    #D52B1E;
+  --bol-yellow: #F9E300;
+  --bol-green:  #007934;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
+  --color-bol-red:    var(--bol-red);
+  --color-bol-yellow: var(--bol-yellow);
+  --color-bol-green:  var(--bol-green);
 }
 
 *,
@@ -164,6 +171,16 @@ input[type='date'] {
   height: 3px;
   border-radius: 9999px;
   background: linear-gradient(90deg, #D52B1E 0 33.3%, #F9E300 33.3% 66.6%, #007934 66.6% 100%);
+}
+
+/* Franja tricolor vertical — borde izquierdo de tarjetas destacadas */
+.tricolor-edge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #D52B1E 0 33.3%, #F9E300 33.3% 66.6%, #007934 66.6% 100%);
 }
 
 /* Ocultar scrollbar */

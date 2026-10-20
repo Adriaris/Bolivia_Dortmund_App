@@ -16,8 +16,9 @@ export default function NextMatchCard({ match }: { match: Match }) {
   return (
     <Link
       href={`/matches/${match.id}`}
-      className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-[#141414] border border-[#2a2a2a] hover:border-zinc-600 active:bg-[#1f1f1f] transition-colors"
+      className="relative overflow-hidden flex items-center gap-3 pl-5 pr-4 py-3.5 rounded-2xl bg-[#141414] border border-[#2a2a2a] hover:border-zinc-600 active:bg-[#1f1f1f] transition-colors"
     >
+      <span aria-hidden className="tricolor-edge" />
       <TeamLogo name={match.opponent_name} size={36} />
 
       <div className="flex-1 min-w-0">

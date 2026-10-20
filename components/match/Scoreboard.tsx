@@ -21,8 +21,8 @@ const statusDetail: Record<string, string> = {
 }
 
 const statusDot: Record<string, string> = {
-  first_half:  'bg-white animate-pulse',
-  second_half: 'bg-white animate-pulse',
+  first_half:  'bg-bol-yellow animate-pulse',
+  second_half: 'bg-bol-yellow animate-pulse',
   half_time:   'bg-zinc-500',
   pending:     'bg-zinc-600',
   finished:    'bg-zinc-600',
@@ -44,7 +44,7 @@ export default function Scoreboard({ match }: ScoreboardProps) {
 
         {/* Marcador central — solo números: nunca ensancha la columna */}
         <div className="flex items-center gap-2 shrink-0 pt-3">
-          <span className="text-5xl font-black tabular-nums text-white leading-none">
+          <span className="text-5xl font-black tabular-nums text-bol-yellow leading-none">
             {match.our_score}
           </span>
           <span className="text-xl font-thin text-zinc-700">—</span>

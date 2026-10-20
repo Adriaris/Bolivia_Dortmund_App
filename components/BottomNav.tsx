@@ -50,9 +50,9 @@ export default function BottomNav() {
                 className={poppingKey === href ? 'tab-pop' : ''}
                 onAnimationEnd={() => setPoppingKey(null)}
               >
-                <Icon size={24} className={active ? 'text-white' : 'text-zinc-500'} />
+                <Icon size={24} className={active ? 'text-bol-yellow' : 'text-zinc-500'} />
               </span>
-              <span className={`text-[10px] font-semibold tracking-wide ${active ? 'text-white' : 'text-zinc-500'}`}>
+              <span className={`text-[10px] font-semibold tracking-wide ${active ? 'text-bol-yellow' : 'text-zinc-500'}`}>
                 {label}
               </span>
             </Link>

@@ -386,7 +386,7 @@ export default function LiveMatchClient({
             <button
               onClick={() => setModal({ type: 'our_goal' })}
               disabled={!isActive || loading}
-              className="flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-white text-black font-bold text-sm hover:bg-zinc-100 active:bg-zinc-200 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              className="flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-bol-yellow text-black font-bold text-sm hover:bg-[#e8d400] active:bg-[#d6c400] transition-colors disabled:opacity-30 disabled:pointer-events-none"
             >
               <GiSoccerBall size={26} />
               Gol nuestro

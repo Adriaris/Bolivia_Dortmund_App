@@ -46,7 +46,8 @@ export default function Clock({ match }: ClockProps) {
 
   return (
     <div className="flex flex-col items-center py-4">
-      <span className="text-6xl font-black tabular-nums tracking-tight text-white">
+      {/* Amarillo mientras corre el reloj; blanco en pausa o por empezar */}
+      <span className={`text-6xl font-black tabular-nums tracking-tight ${match.is_clock_running ? 'text-bol-yellow' : 'text-white'}`}>
         {formatTime(elapsed)}
       </span>
       <span className="text-xs text-zinc-500 mt-2 font-medium uppercase tracking-widest">

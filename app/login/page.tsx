@@ -34,7 +34,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-bol-yellow flex items-center justify-center mb-4">
             <Lock size={24} className="text-black" />
           </div>
           <h1 className="text-xl font-black text-white">Acceso admin</h1>
