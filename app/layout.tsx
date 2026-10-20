@@ -33,7 +33,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full bg-black font-sans">
+      {/* suppressHydrationWarning: extensiones (ColorZilla, etc.) añaden atributos al body antes de hidratar */}
+      <body className="min-h-full bg-black font-sans" suppressHydrationWarning>
         {/* Cubre el notch/Dynamic Island con fondo negro en todas las páginas.
             Elemento DOM real para mantener estable la safe-area en PWA */}
         <div className="notch-cover" />
