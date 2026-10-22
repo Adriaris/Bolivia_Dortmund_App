@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { getMatch, getMatchEvents, getPlayers, getTournaments } from '@/lib/supabase/queries'
 import TeamLogo from '@/components/ui/TeamLogo'
+import { getMatchMvps } from '@/lib/supabase/mvp'
 import LiveMatchClient from './LiveMatchClient'
 
 export const dynamic = 'force-dynamic'
@@ -10,11 +11,12 @@ export const dynamic = 'force-dynamic'
 export default async function MatchPage(props: PageProps<'/matches/[id]'>) {
   const { id } = await props.params
 
-  const [match, events, players, tournaments] = await Promise.all([
+  const [match, events, players, tournaments, mvps] = await Promise.all([
     getMatch(id).catch(() => null),
     getMatchEvents(id).catch(() => []),
     getPlayers().catch(() => []),
     getTournaments().catch(() => []),
+    getMatchMvps(id).catch(() => []),
   ])
 
   if (!match) notFound()
@@ -51,6 +53,7 @@ export default async function MatchPage(props: PageProps<'/matches/[id]'>) {
         initialEvents={events}
         players={players}
         tournaments={tournaments}
+        initialMvps={mvps}
       />
     </main>
   )

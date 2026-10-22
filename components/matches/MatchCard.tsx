@@ -1,10 +1,14 @@
 import Link from 'next/link'
 import { ChevronRight, Radio } from 'lucide-react'
 import TeamLogo from '@/components/ui/TeamLogo'
+import MvpBadge from '@/components/mvp/MvpBadge'
+import type { MatchMvpWithPlayer } from '@/lib/supabase/mvp'
 import type { Match } from '@/lib/types'
 
 interface MatchCardProps {
   match: Match
+  /** MVP(s) del partido, precargados por la página en una sola consulta */
+  mvps?: MatchMvpWithPlayer[]
 }
 
 const statusBadge: Record<string, { label: string; className: string }> = {
@@ -33,7 +37,7 @@ function formatDate(dateStr: string | null): string {
   })
 }
 
-export default function MatchCard({ match }: MatchCardProps) {
+export default function MatchCard({ match, mvps }: MatchCardProps) {
   const badge = statusBadge[match.status] ?? statusBadge.pending
   const isLive = match.status === 'first_half' || match.status === 'second_half'
   const isPostponed = match.status === 'postponed'
@@ -81,6 +85,7 @@ export default function MatchCard({ match }: MatchCardProps) {
             </>
           )}
         </div>
+        {match.status === 'finished' && <MvpBadge mvps={mvps} className="mt-1 max-w-full" />}
       </div>
 
       {/* Marcador (solo si no está aplazado o pendiente) */}

@@ -49,11 +49,17 @@ interface CelebrationConfettiProps {
   title?: string
   /** Subtítulo del banner */
   subtitle?: string
+  /**
+   * true = celebración propia de una pantalla (p. ej. MVP): no consume ni
+   * respeta el "una vez por carga" que comparte la celebración de campeón.
+   */
+  independent?: boolean
 }
 
 export default function CelebrationConfetti({
   title = '¡Campeones de liga!',
   subtitle = 'Bolivia Dortmund',
+  independent = false,
 }: CelebrationConfettiProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const bannerRef = useRef<HTMLButtonElement | null>(null)
@@ -64,10 +70,10 @@ export default function CelebrationConfetti({
 
   // Espera a que termine el splash y dispara (una vez por carga completa)
   useEffect(() => {
-    if (alreadyCelebrated) return
+    if (!independent && alreadyCelebrated) return
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
     if (reduce) return
-    alreadyCelebrated = true
+    if (!independent) alreadyCelebrated = true
     // Decisión solo-cliente (reduced-motion no existe en SSR); render inicial
     // null en servidor y cliente → sin mismatch de hidratación.
     const t = setTimeout(() => {
@@ -75,7 +81,7 @@ export default function CelebrationConfetti({
       setShow(true)
     }, SPLASH_DURATION)
     return () => clearTimeout(t)
-  }, [])
+  }, [independent])
 
   // Inicia el fade del banner pasado su tiempo
   useEffect(() => {

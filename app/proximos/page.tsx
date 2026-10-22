@@ -1,6 +1,7 @@
 import { CalendarDays, CalendarX } from 'lucide-react'
 import { getUpcomingMatches } from '@/lib/supabase/queries'
 import MatchCard from '@/components/matches/MatchCard'
+import ConvocatoriaActions from '@/components/attendance/ConvocatoriaActions'
 import SyncFixturesButton from './SyncFixturesButton'
 
 export const dynamic = 'force-dynamic'
@@ -45,7 +46,10 @@ export default async function ProximosPage() {
               </div>
               <div className="flex flex-col gap-2">
                 {allPostponed.map((m) => (
-                  <MatchCard key={m.id} match={m} />
+                  <div key={m.id}>
+                    <MatchCard match={m} />
+                    <ConvocatoriaActions match={m} adminOnly />
+                  </div>
                 ))}
               </div>
             </section>
@@ -56,7 +60,10 @@ export default async function ProximosPage() {
             <section>
               <div className="flex flex-col gap-2">
                 {pending.map((m) => (
-                  <MatchCard key={m.id} match={m} />
+                  <div key={m.id}>
+                    <MatchCard match={m} />
+                    <ConvocatoriaActions match={m} adminOnly />
+                  </div>
                 ))}
               </div>
             </section>

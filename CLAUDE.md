@@ -22,7 +22,8 @@
 | `app/api/sync-standings/route.ts` | Scraping clasificación → `standings` (escribe con service role) |
 | `app/api/sync-fixtures/route.ts` | Scraping calendario/resultados → `matches` + `league_results` (service role) |
 | `app/api/proxy-image/route.ts` | Proxy de escudos (solo `virtual.fundaciovalldor7.com`) |
-| `supabase/schema.sql` → `rls.sql` → `seed.sql` | Esquema, políticas y datos iniciales (ejecutar en ese orden en BD vacía) |
+| `supabase/schema.sql` → `rls.sql` → `accounts-attendance-mvp.sql` → `seed.sql` | Esquema, políticas, cuentas/asistencia/MVP y datos iniciales (ejecutar en ese orden en BD vacía) |
+| `lib/supabase/server-auth.ts` | `requireAdmin(req)` / `getRequestUser(req)` para API routes (token Bearer del cliente) |
 | `public/logos/Bolivia-dortmund.png` | Escudo con fondo transparente (generado desde `Bolivia logo.jpeg`) |
 
 Diferencia con el Chevere: `standings` y `league_results` NO tienen policy de escritura
@@ -69,6 +70,21 @@ jugados y rutas de los escudos de los rivales. Sirve para el seed inicial de la 
 - Confirmar UI oscura con acentos tricolor (implementado de forma discreta: splash + franja bajo el header; podio y campeón mantienen el ámbar del Chevere)
 - Nombre del repo/subdominio Vercel (sugerencia: `bvd04` / `boliviadortmund`)
 - Capitán del equipo
+
+## Cuentas de jugador, asistencia y MVP (22-oct-2026, propio de Bolivia Dortmund)
+- **Roles**: anon = lectura; jugador = usuario Auth vinculado en `player_accounts`
+  (email interno `<player_id>@players.bvd04.fc`, contraseña = PIN de 6 cifras, alta
+  desde "Soy jugador" en /jugadores vía `/api/players/register` con service role);
+  admin = `is_admin()` en BD (cuenta legacy `admin@bvd04.fc` con `app_metadata.role='admin'`
+  o jugador con `players.is_admin`: Fran #7 y Adrià #24). `useAuth()` → `{ isAdmin, playerId, refresh }`.
+- **Escrituras de partidos/eventos/plantilla** = solo `is_admin()` (ya NO cualquier authenticated).
+- **Asistencia**: `match_attendance`; el jugador cambia la suya solo antes del partido; el admin siempre.
+- **MVP**: votación abierta ⇔ `status='finished' and mvp_closed_at is null`. Votos anónimos:
+  `mvp_ballots` (quién votó) y `mvp_votes` (a quién) sin relación ni policies; todo por RPC
+  (`get_mvp_status`, `cast_mvp_vote`, `close_mvp_voting`). Se cierra sola con el último voto;
+  empate = MVP compartido en `match_mvps`; no se permite autovoto.
+- Enlace único por partido: `/convocatoria/[id]` (lo comparte un admin por WhatsApp).
+- No activar "Leaked password protection" en Supabase Auth: rechazaría PINs numéricos.
 
 ## Reglas heredadas (idénticas al Chevere)
 - Cronómetro por timestamps (`computeElapsedSeconds`), jamás setInterval como verdad

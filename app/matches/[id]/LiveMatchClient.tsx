@@ -14,6 +14,8 @@ import SaveModal from '@/components/match/SaveModal'
 import EditEventModal from '@/components/match/EditEventModal'
 import EditMatchModal from '@/components/match/EditMatchModal'
 import { useAuth } from '@/components/auth/AuthProvider'
+import MatchMvpPanel from '@/components/mvp/MatchMvpPanel'
+import type { MatchMvpWithPlayer } from '@/lib/supabase/mvp'
 import {
   updateMatch,
   addGoal,
@@ -62,6 +64,7 @@ interface LiveMatchClientProps {
   initialEvents: MatchEventWithPlayers[]
   players: Player[]
   tournaments: Tournament[]
+  initialMvps?: MatchMvpWithPlayer[]
 }
 
 type ModalState =
@@ -77,6 +80,7 @@ export default function LiveMatchClient({
   initialEvents,
   players,
   tournaments,
+  initialMvps = [],
 }: LiveMatchClientProps) {
   const { isAdmin } = useAuth()
   const router = useRouter()
@@ -378,6 +382,9 @@ export default function LiveMatchClient({
           loading={loading}
         />
       )}
+
+      {/* Convocatoria / votación MVP / MVP confirmado */}
+      <MatchMvpPanel match={match} initialMvps={initialMvps} isAdmin={isAdmin} />
 
       {/* Botones de gol/parada (solo admin, solo cuando activo) */}
       {isAdmin && match.status !== 'finished' && match.status !== 'walkover' && (

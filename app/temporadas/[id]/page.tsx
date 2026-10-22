@@ -11,6 +11,7 @@ import {
 import { computePlayerStats } from '@/lib/stats'
 import { OUR_STANDINGS_TEAM } from '@/lib/teams'
 import MatchCard from '@/components/matches/MatchCard'
+import { getMvpsForMatches } from '@/lib/supabase/mvp'
 import CaptainBadge from '@/components/ui/CaptainBadge'
 import StandingsTable from '@/app/clasificacion/StandingsTable'
 import ArchiveStatsTabs from './ArchiveStatsTabs'
@@ -55,9 +56,10 @@ export default async function TemporadaPage({
     position: tp.position,
     is_captain: tp.is_captain,
   }))
-  const eventsArrays = await Promise.all(
-    matches.map((m) => getMatchEvents(m.id).catch(() => []))
-  )
+  const [eventsArrays, mvps] = await Promise.all([
+    Promise.all(matches.map((m) => getMatchEvents(m.id).catch(() => []))),
+    getMvpsForMatches(matches),
+  ])
   const stats = computePlayerStats(playersOfSeason, eventsArrays.flat())
 
   const ourStanding = standings.find(
@@ -146,7 +148,7 @@ export default async function TemporadaPage({
               Partidos ({matches.length})
             </h2>
             <div className="flex flex-col gap-2">
-              {matches.map((m) => <MatchCard key={m.id} match={m} />)}
+              {matches.map((m) => <MatchCard key={m.id} match={m} mvps={mvps[m.id]} />)}
             </div>
           </section>
         )}

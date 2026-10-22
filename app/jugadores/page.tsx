@@ -1,11 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, X } from 'lucide-react'
 import { getPlayers, createPlayer } from '@/lib/supabase/queries'
+import { getRegisteredPlayerIds } from '@/lib/auth'
+import { safeNextPath } from '@/lib/players'
 import { useAuth } from '@/components/auth/AuthProvider'
 import Button from '@/components/ui/Button'
 import CaptainBadge from '@/components/ui/CaptainBadge'
+import PlayerIdentityBar from '@/components/players/PlayerIdentityBar'
+import PlayerAccessModal from '@/components/players/PlayerAccessModal'
+import ReleaseAccountModal from '@/components/players/ReleaseAccountModal'
 import type { Player, Position } from '@/lib/types'
 
 const POSITIONS: Position[] = ['POR', 'DEF', 'MED', 'DEL', 'CAR']
@@ -18,11 +24,29 @@ const positionLabel: Record<Position, string> = {
   CAR: 'Carrilero',
 }
 
+// useSearchParams exige un límite de Suspense (deep link ?soy=1&next=/convocatoria/<id>)
 export default function JugadoresPage() {
-  const { isAdmin } = useAuth()
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-black" />}>
+      <JugadoresContent />
+    </Suspense>
+  )
+}
+
+function JugadoresContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { isAdmin, playerId, loading: authLoading } = useAuth()
   const [players, setPlayers] = useState<Player[]>([])
+  const [registeredIds, setRegisteredIds] = useState<Set<string>>(() => new Set())
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [showAccess, setShowAccess] = useState(false)
+  const [releaseTarget, setReleaseTarget] = useState<Player | null>(null)
+
+  const wantsAccess = searchParams.get('soy') === '1'
+  const nextPath = safeNextPath(searchParams.get('next'))
+  const deepLinkHandled = useRef(false)
 
   const [number, setNumber] = useState('')
   const [name, setName] = useState('')
@@ -30,14 +54,32 @@ export default function JugadoresPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function load() {
+  const loadRegistered = useCallback(async () => {
+    const ids = await getRegisteredPlayerIds().catch(() => null)
+    if (ids) setRegisteredIds(ids)
+  }, [])
+
+  const load = useCallback(async () => {
     setLoading(true)
-    const data = await getPlayers().catch(() => [])
+    const [data] = await Promise.all([getPlayers().catch(() => []), loadRegistered()])
     setPlayers(data)
     setLoading(false)
-  }
+  }, [loadRegistered])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { void load() }, [load])
+
+  // Deep link: ?soy=1 abre el selector; si ya hay jugador en sesión, ir directo a `next`
+  useEffect(() => {
+    if (!wantsAccess || authLoading || loading || deepLinkHandled.current) return
+    deepLinkHandled.current = true
+    if (playerId) {
+      if (nextPath) router.replace(nextPath)
+      return
+    }
+    setShowAccess(true)
+  }, [wantsAccess, authLoading, loading, playerId, nextPath, router])
+
+  const me = playerId ? players.find((p) => p.id === playerId) ?? null : null
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -76,6 +118,14 @@ export default function JugadoresPage() {
           </button>
         )}
       </div>
+
+      {/* Identidad del jugador en este móvil */}
+      <PlayerIdentityBar
+        player={me}
+        playerId={playerId}
+        loading={authLoading}
+        onIdentify={() => setShowAccess(true)}
+      />
 
       {/* Formulario nuevo jugador */}
       {showForm && (
@@ -167,10 +217,45 @@ export default function JugadoresPage() {
                   {p.is_captain && <CaptainBadge />}
                 </p>
               </div>
+              {registeredIds.has(p.id) && (
+                isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => setReleaseTarget(p)}
+                    className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 border border-[#333] px-2 py-1 rounded-lg hover:text-red-400 hover:border-red-900 transition-colors shrink-0"
+                    aria-label={`Liberar la cuenta de ${p.name}`}
+                  >
+                    Liberar
+                  </button>
+                ) : (
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/80 shrink-0">
+                    Registrado
+                  </span>
+                )
+              )}
               <span className="text-xs font-bold text-zinc-700 uppercase">{p.position}</span>
             </div>
           ))}
         </div>
+      )}
+
+      {showAccess && (
+        <PlayerAccessModal
+          players={players}
+          registeredIds={registeredIds}
+          nextPath={nextPath}
+          onClose={() => setShowAccess(false)}
+          onRegisteredChange={loadRegistered}
+        />
+      )}
+
+      {releaseTarget && (
+        <ReleaseAccountModal
+          player={releaseTarget}
+          isSelf={releaseTarget.id === playerId}
+          onClose={() => setReleaseTarget(null)}
+          onReleased={loadRegistered}
+        />
       )}
     </main>
   )

@@ -6,6 +6,8 @@ import NextMatchCard from '@/components/matches/NextMatchCard'
 import HomeHeader from '@/components/auth/HomeHeader'
 import HomeRealtimeUpdater from '@/components/HomeRealtimeUpdater'
 import CelebrationConfetti from '@/components/CelebrationConfetti'
+import ConvocatoriaActions from '@/components/attendance/ConvocatoriaActions'
+import { getMvpsForMatches } from '@/lib/supabase/mvp'
 import { OUR_STANDINGS_TEAM } from '@/lib/teams'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +19,8 @@ export default async function HomePage() {
     getTournaments().catch(() => []),
     getStandings().catch(() => []),
   ])
+  // MVP de cada partido jugado: una sola consulta para toda la lista
+  const mvpsByMatch = await getMvpsForMatches(matches)
 
   const currentTournament = tournaments.find((t) => t.is_current) ?? tournaments[0] ?? null
   const pastTournaments = tournaments.filter((t) => t.id !== currentTournament?.id)
@@ -82,6 +86,7 @@ export default async function HomePage() {
             Próximo partido
           </h2>
           <NextMatchCard match={nextMatch} />
+          <ConvocatoriaActions match={nextMatch} />
         </section>
       )}
 
@@ -148,7 +153,7 @@ export default async function HomePage() {
               </p>
             ) : (
               <div className="flex flex-col gap-2">
-                {currentMatches.map((m) => <MatchCard key={m.id} match={m} />)}
+                {currentMatches.map((m) => <MatchCard key={m.id} match={m} mvps={mvpsByMatch[m.id]} />)}
               </div>
             )}
           </section>
@@ -193,7 +198,7 @@ export default async function HomePage() {
               Sin torneo
             </h2>
             <div className="flex flex-col gap-2">
-              {unassigned.map((m) => <MatchCard key={m.id} match={m} />)}
+              {unassigned.map((m) => <MatchCard key={m.id} match={m} mvps={mvpsByMatch[m.id]} />)}
             </div>
           </section>
         )}

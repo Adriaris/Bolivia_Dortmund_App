@@ -39,6 +39,7 @@ export interface Player {
   position: string
   is_captain: boolean
   active: boolean
+  is_admin: boolean
   created_at: string
 }
 
@@ -57,6 +58,8 @@ export interface Match {
   first_half_elapsed_seconds: number
   second_half_elapsed_seconds: number
   tournament_id: string | null
+  // Votación MVP: abierta ⇔ status = 'finished' y mvp_closed_at === null
+  mvp_closed_at: string | null
   created_at: string
   updated_at: string
 }
@@ -151,3 +154,70 @@ export interface LeagueResult {
   tournament_id: string
   updated_at: string
 }
+
+// ============================================================
+// Cuentas de jugador, asistencia y MVP
+// ============================================================
+
+// Vínculo usuario Auth ↔ jugador. Email interno: `${player_id}@players.bvd04.fc`, contraseña = PIN (6 cifras)
+export interface PlayerAccount {
+  player_id: string
+  user_id: string
+  created_at: string
+}
+
+export type AttendanceStatus = 'yes' | 'no'
+
+export interface MatchAttendance {
+  match_id: string
+  player_id: string
+  status: AttendanceStatus
+  updated_by_admin: boolean
+  updated_at: string
+}
+
+// MVP confirmado (empate → varias filas por partido)
+export interface MatchMvp {
+  match_id: string
+  player_id: string
+  votes: number
+}
+
+export type MvpPlayer = Pick<Player, 'id' | 'number' | 'name' | 'alias'>
+
+export interface MatchMvpWithPlayer extends MatchMvp {
+  player: MvpPlayer | null
+}
+
+export interface MatchAttendanceWithPlayer extends MatchAttendance {
+  player: Player | null
+}
+
+export interface MvpResult {
+  player_id: string
+  votes: number
+}
+
+// Respuesta de las RPC get_mvp_status / cast_mvp_vote / close_mvp_voting
+export interface MvpStatus {
+  match_id: string
+  voting_open: boolean
+  closed: boolean
+  eligible: number              // asistentes con cuenta → votantes
+  voted: number                 // papeletas emitidas
+  me_player_id: string | null
+  me_attended: boolean
+  me_has_voted: boolean
+  can_vote: boolean
+  pending_player_ids: string[] | null  // solo admins; null para el resto
+  results: MvpResult[] | null          // solo con la votación cerrada
+}
+
+// Errores que lanzan las RPC de MVP (texto de la excepción de Postgres)
+export type MvpErrorCode =
+  | 'not_registered'
+  | 'voting_closed'
+  | 'not_attended'
+  | 'already_voted'
+  | 'invalid_candidate'
+  | 'not_admin'
