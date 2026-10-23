@@ -392,3 +392,232 @@ create policy "matches_all_admin" on matches for all to authenticated
 drop policy if exists "events_all_admin" on match_events;
 create policy "events_all_admin" on match_events for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
+
+-- ============================================================
+-- v2 (2026-10-23): el voto se puede CAMBIAR y la votación NO se cierra sola
+-- ============================================================
+-- Para poder cambiar un voto sin guardar quién lo emitió, cada voto lleva
+-- voter_key = HMAC-SHA256(match_id:player_id, secreto en Supabase Vault).
+-- La tabla solo contiene huellas: identificar a un votante exige leer el
+-- secreto del Vault y recalcular las huellas a propósito.
+-- La votación solo la cierra un admin (close_mvp_voting). Cuentan los votos
+-- de los asistentes con cuenta EN ESE MOMENTO y solo hacia asistentes.
+
+select vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'mvp_voter_key',
+  'Clave HMAC para identificar de forma anónima el voto MVP de cada jugador')
+where not exists (select 1 from vault.secrets where name = 'mvp_voter_key');
+
+alter table mvp_votes add column if not exists voter_key text;
+delete from mvp_votes where voter_key is null; -- no había votos al migrar
+alter table mvp_votes alter column voter_key set not null;
+alter table mvp_votes drop constraint if exists mvp_votes_match_voter_key;
+alter table mvp_votes add constraint mvp_votes_match_voter_key unique (match_id, voter_key);
+
+create or replace function public.mvp_voter_key(p_match_id uuid, p_player_id uuid)
+returns text language sql stable security definer
+set search_path = '' as $$
+  select encode(extensions.hmac(
+    p_match_id::text || ':' || p_player_id::text,
+    (select ds.decrypted_secret from vault.decrypted_secrets ds where ds.name = 'mvp_voter_key'),
+    'sha256'), 'hex')
+$$;
+
+-- Votantes válidos = asistentes 'yes' con cuenta; candidatos = asistentes 'yes'
+create or replace function public.mvp_valid_tally(p_match_id uuid)
+returns table (player_id uuid, votes integer) language sql stable security definer
+set search_path = '' as $$
+  with eligible_keys as (
+    select public.mvp_voter_key(p_match_id, a.player_id) as k
+    from public.match_attendance a
+    join public.player_accounts pa on pa.player_id = a.player_id
+    where a.match_id = p_match_id and a.status = 'yes'
+  )
+  select v.voted_player_id, count(*)::integer
+  from public.mvp_votes v
+  where v.match_id = p_match_id
+    and v.voter_key in (select k from eligible_keys)
+    and exists (
+      select 1 from public.match_attendance c
+      where c.match_id = p_match_id and c.player_id = v.voted_player_id and c.status = 'yes'
+    )
+  group by v.voted_player_id
+$$;
+
+revoke execute on function public.mvp_voter_key(uuid, uuid) from public, anon, authenticated;
+revoke execute on function public.mvp_valid_tally(uuid) from public, anon, authenticated;
+
+create or replace function public.finalize_mvp(p_match_id uuid)
+returns void language plpgsql security definer
+set search_path = '' as $$
+declare
+  v_max integer;
+begin
+  update public.matches set mvp_closed_at = now()
+  where id = p_match_id and mvp_closed_at is null;
+  if not found then
+    return;
+  end if;
+  select max(t.votes) into v_max from public.mvp_valid_tally(p_match_id) t;
+  if v_max is null then
+    return; -- nadie votó: se cierra sin MVP
+  end if;
+  insert into public.match_mvps (match_id, player_id, votes)
+  select p_match_id, t.player_id, t.votes
+  from public.mvp_valid_tally(p_match_id) t
+  where t.votes = v_max;
+end;
+$$;
+revoke execute on function public.finalize_mvp(uuid) from public, anon, authenticated;
+
+-- Estado: añade me_voted_player_id (solo el propio votante ve su voto) y all_voted
+create or replace function public.get_mvp_status(p_match_id uuid)
+returns jsonb language plpgsql stable security definer
+set search_path = '' as $$
+declare
+  v_match     public.matches%rowtype;
+  v_me        uuid := public.current_player_id();
+  v_admin     boolean := public.is_admin();
+  v_open      boolean;
+  v_closed    boolean;
+  v_eligible  integer;
+  v_voted     integer;
+  v_attended  boolean;
+  v_has_voted boolean;
+  v_my_vote   uuid;
+begin
+  select * into v_match from public.matches where id = p_match_id;
+  if not found then
+    raise exception 'match_not_found';
+  end if;
+  v_closed := v_match.mvp_closed_at is not null;
+  v_open   := v_match.status = 'finished' and not v_closed;
+
+  select count(*) into v_eligible
+  from public.match_attendance a
+  join public.player_accounts pa on pa.player_id = a.player_id
+  where a.match_id = p_match_id and a.status = 'yes';
+
+  select count(*) into v_voted
+  from public.mvp_ballots b
+  join public.match_attendance a on a.match_id = b.match_id and a.player_id = b.voter_player_id and a.status = 'yes'
+  join public.player_accounts pa on pa.player_id = b.voter_player_id
+  where b.match_id = p_match_id;
+
+  v_attended := v_me is not null and exists (
+    select 1 from public.match_attendance
+    where match_id = p_match_id and player_id = v_me and status = 'yes'
+  );
+  v_has_voted := v_me is not null and exists (
+    select 1 from public.mvp_ballots where match_id = p_match_id and voter_player_id = v_me
+  );
+  if v_has_voted then
+    select v.voted_player_id into v_my_vote from public.mvp_votes v
+    where v.match_id = p_match_id and v.voter_key = public.mvp_voter_key(p_match_id, v_me);
+  end if;
+
+  return jsonb_build_object(
+    'match_id',           p_match_id,
+    'voting_open',        v_open,
+    'closed',             v_closed,
+    'eligible',           v_eligible,
+    'voted',              v_voted,
+    'all_voted',          v_eligible > 0 and v_voted >= v_eligible,
+    'me_player_id',       v_me,
+    'me_attended',        v_attended,
+    'me_has_voted',       v_has_voted,
+    'me_voted_player_id', v_my_vote,
+    'can_vote',           v_open and v_attended,
+    'pending_player_ids', case when v_admin then (
+        select coalesce(jsonb_agg(a.player_id), '[]'::jsonb)
+        from public.match_attendance a
+        join public.player_accounts pa on pa.player_id = a.player_id
+        where a.match_id = p_match_id and a.status = 'yes'
+          and not exists (
+            select 1 from public.mvp_ballots b
+            where b.match_id = p_match_id and b.voter_player_id = a.player_id
+          )
+      ) else null end,
+    'results', case when v_closed then (
+        select coalesce(jsonb_agg(jsonb_build_object('player_id', t.player_id, 'votes', t.votes)
+                                  order by t.votes desc), '[]'::jsonb)
+        from public.mvp_valid_tally(p_match_id) t
+      ) else null end
+  );
+end;
+$$;
+
+-- Votar o CAMBIAR el voto mientras esté abierta. Ya no cierra la votación.
+create or replace function public.cast_mvp_vote(p_match_id uuid, p_voted_player_id uuid)
+returns jsonb language plpgsql security definer
+set search_path = '' as $$
+declare
+  v_me  uuid := public.current_player_id();
+  v_key text;
+begin
+  if v_me is null then
+    raise exception 'not_registered';
+  end if;
+  perform 1 from public.matches
+  where id = p_match_id and status = 'finished' and mvp_closed_at is null
+  for update;
+  if not found then
+    raise exception 'voting_closed';
+  end if;
+  if not exists (
+    select 1 from public.match_attendance
+    where match_id = p_match_id and player_id = v_me and status = 'yes'
+  ) then
+    raise exception 'not_attended';
+  end if;
+  if p_voted_player_id = v_me or not exists (
+    select 1 from public.match_attendance
+    where match_id = p_match_id and player_id = p_voted_player_id and status = 'yes'
+  ) then
+    raise exception 'invalid_candidate';
+  end if;
+
+  v_key := public.mvp_voter_key(p_match_id, v_me);
+  insert into public.mvp_ballots (match_id, voter_player_id) values (p_match_id, v_me)
+  on conflict do nothing;
+  insert into public.mvp_votes (match_id, voted_player_id, voter_key)
+  values (p_match_id, p_voted_player_id, v_key)
+  on conflict (match_id, voter_key) do update set voted_player_id = excluded.voted_player_id;
+
+  return public.get_mvp_status(p_match_id);
+end;
+$$;
+
+revoke execute on function public.cast_mvp_vote(uuid, uuid) from public, anon;
+grant execute on function public.cast_mvp_vote(uuid, uuid) to authenticated;
+
+-- ============================================================
+-- v3 (2026-10-23): la convocatoria se cierra a la hora de inicio programada
+-- ============================================================
+-- Además de al arrancar el crono (status deja de ser 'pending'), los jugadores
+-- ya no pueden cambiar su asistencia a partir de match_date + match_time (hora
+-- de Madrid). Sin fecha u hora no hay cierre por hora. Aplazado = abierta.
+-- Misma regla en el cliente: lib/kickoff.ts → attendanceOpen().
+create or replace function public.match_kickoff_at(p_date date, p_time text)
+returns timestamptz language sql stable
+set search_path = '' as $$
+  select case
+    when p_date is not null and p_time ~ '^\s*\d{1,2}:\d{2}\s*$'
+      then (p_date + trim(p_time)::time) at time zone 'Europe/Madrid'
+  end
+$$;
+
+create or replace function public.match_accepts_attendance(p_match_id uuid)
+returns boolean language sql stable security definer
+set search_path = '' as $$
+  select exists (
+    select 1 from public.matches m
+    where m.id = p_match_id
+      and (
+        m.status = 'postponed'
+        or (m.status = 'pending'
+            and coalesce(now() < public.match_kickoff_at(m.match_date, m.match_time), true))
+      )
+  )
+$$;
+revoke execute on function public.match_accepts_attendance(uuid) from public, anon;
+grant execute on function public.match_accepts_attendance(uuid) to authenticated;

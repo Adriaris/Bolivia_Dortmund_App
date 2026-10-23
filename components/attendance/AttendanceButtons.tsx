@@ -47,9 +47,9 @@ export default function AttendanceButtons({ current, saving, onChange }: Attenda
       </div>
       <p className="text-center text-xs text-zinc-500">
         {current === 'yes'
-          ? 'Estás apuntado. Puedes cambiarlo hasta que empiece el partido.'
+          ? 'Estás apuntado. Puedes cambiarlo hasta la hora del partido.'
           : current === 'no'
-            ? 'Has dicho que no vienes. Puedes cambiarlo hasta que empiece el partido.'
+            ? 'Has dicho que no vienes. Puedes cambiarlo hasta la hora del partido.'
             : 'Aún no has respondido.'}
       </p>
     </div>

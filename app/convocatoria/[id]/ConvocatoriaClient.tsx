@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Ban, ChevronDown, ChevronRight, Loader2, Radio, ShieldCheck, UserRound } from 'lucide-react'
+import { Ban, ChevronDown, ChevronRight, Loader2, Lock, Radio, ShieldCheck, UserRound } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import ConvocatoriaHeader from '@/components/attendance/ConvocatoriaHeader'
 import AttendanceButtons from '@/components/attendance/AttendanceButtons'
@@ -28,6 +28,7 @@ import {
   type MatchAttendanceWithPlayer,
   type MatchMvpWithPlayer,
 } from '@/lib/supabase/mvp'
+import { attendanceOpen, kickoffAt } from '@/lib/kickoff'
 import type { AttendanceStatus, Match, MvpStatus, Player } from '@/lib/types'
 
 type Phase = 'attendance' | 'live' | 'voting' | 'closed' | 'walkover'
@@ -45,11 +46,12 @@ interface ConvocatoriaClientProps {
   initialStatus: MvpStatus | null
 }
 
-function phaseOf(match: Match, status: MvpStatus | null): Phase {
+function phaseOf(match: Match, status: MvpStatus | null, now: number): Phase {
   switch (match.status) {
     case 'pending':
     case 'postponed':
-      return 'attendance'
+      // La convocatoria se cierra a la hora programada aunque nadie arranque el crono
+      return attendanceOpen(match, now) ? 'attendance' : 'live'
     case 'first_half':
     case 'half_time':
     case 'second_half':
@@ -100,7 +102,21 @@ export default function ConvocatoriaClient({
     return () => { alive.current = false }
   }, [])
 
-  const phase = phaseOf(match, status)
+  // Reloj para cerrar la convocatoria justo a la hora de inicio con la página abierta
+  const [now, setNow] = useState(() => Date.now())
+  const kickoffMs = kickoffAt(match.match_date, match.match_time)?.getTime() ?? null
+  useEffect(() => {
+    if (kickoffMs === null || match.status !== 'pending') return
+    const wait = kickoffMs - Date.now()
+    if (wait <= 0) return
+    // setTimeout admite como máximo ~24,8 días; más allá se recalcula al recargar
+    const t = setTimeout(() => setNow(Date.now()), Math.min(wait + 500, 2_147_000_000))
+    return () => clearTimeout(t)
+  }, [kickoffMs, match.status])
+
+  const phase = phaseOf(match, status, now)
+  // Pendiente en BD pero ya pasada la hora: convocatoria cerrada sin crono en marcha
+  const closedByKickoff = phase === 'live' && (match.status === 'pending' || match.status === 'postponed')
   const joinHref = `/jugadores?soy=1&next=${encodeURIComponent(`/convocatoria/${matchId}`)}`
 
   // ── Índices ───────────────────────────────────────────────
@@ -258,14 +274,14 @@ export default function ConvocatoriaClient({
       href={`/matches/${matchId}`}
       className="flex items-center justify-between px-4 py-3.5 rounded-2xl bg-[#141414] border border-[#2a2a2a] text-sm font-semibold text-zinc-300 hover:border-zinc-600 active:bg-[#1f1f1f] transition-colors"
     >
-      {phase === 'live' ? 'Seguir el partido en directo' : 'Ver ficha del partido'}
+      {phase === 'live' && !closedByKickoff ? 'Seguir el partido en directo' : 'Ver ficha del partido'}
       <ChevronRight size={16} className="text-zinc-600" />
     </Link>
   )
 
   return (
     <div className="flex flex-col gap-6">
-      <ConvocatoriaHeader match={match} eyebrow={EYEBROW[phase]} />
+      <ConvocatoriaHeader match={match} eyebrow={closedByKickoff ? 'Convocatoria cerrada' : EYEBROW[phase]} />
 
       {/* ── Fase de asistencia ── */}
       {phase === 'attendance' && (
@@ -321,13 +337,25 @@ export default function ConvocatoriaClient({
       {/* ── Partido en juego ── */}
       {phase === 'live' && (
         <>
-          <div className="flex items-center gap-3 rounded-2xl bg-red-950/20 border border-red-900/40 px-4 py-4">
-            <Radio size={18} className="text-red-500 animate-pulse shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-white">Partido en juego</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Al terminar se abrirá aquí la votación del MVP.</p>
+          {closedByKickoff ? (
+            <div className="flex items-center gap-3 rounded-2xl bg-[#141414] border border-[#2a2a2a] px-4 py-4">
+              <Lock size={18} className="text-zinc-400 shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-white">Convocatoria cerrada</p>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Se cerró a la hora del partido. Al terminar se abrirá aquí la votación del MVP.
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3 rounded-2xl bg-red-950/20 border border-red-900/40 px-4 py-4">
+              <Radio size={18} className="text-red-500 animate-pulse shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-white">Partido en juego</p>
+                <p className="text-xs text-zinc-500 mt-0.5">Al terminar se abrirá aquí la votación del MVP.</p>
+              </div>
+            </div>
+          )}
           {matchLink}
           {actionError && <p className="text-sm text-red-400 text-center">{actionError}</p>}
           <AttendanceLists

@@ -208,7 +208,9 @@ export interface MvpStatus {
   me_player_id: string | null
   me_attended: boolean
   me_has_voted: boolean
-  can_vote: boolean
+  me_voted_player_id: string | null    // mi voto actual: solo me lo devuelve a mí
+  all_voted: boolean                   // han votado todos (la votación sigue abierta hasta que cierre un admin)
+  can_vote: boolean                    // votar o cambiar el voto (abierta y asistí)
   pending_player_ids: string[] | null  // solo admins; null para el resto
   results: MvpResult[] | null          // solo con la votación cerrada
 }

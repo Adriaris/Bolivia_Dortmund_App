@@ -78,10 +78,13 @@ jugados y rutas de los escudos de los rivales. Sirve para el seed inicial de la 
   admin = `is_admin()` en BD (cuenta legacy `admin@bvd04.fc` con `app_metadata.role='admin'`
   o jugador con `players.is_admin`: Fran #7 y Adrià #24). `useAuth()` → `{ isAdmin, playerId, refresh }`.
 - **Escrituras de partidos/eventos/plantilla** = solo `is_admin()` (ya NO cualquier authenticated).
-- **Asistencia**: `match_attendance`; el jugador cambia la suya solo antes del partido; el admin siempre.
+- **Asistencia**: `match_attendance`; el jugador cambia la suya hasta la hora de inicio (`match_date`+`match_time`,
+  hora de Madrid) o hasta que arranque el crono, lo que llegue antes (`lib/kickoff.ts` = SQL `match_accepts_attendance`); el admin siempre.
 - **MVP**: votación abierta ⇔ `status='finished' and mvp_closed_at is null`. Votos anónimos:
   `mvp_ballots` (quién votó) y `mvp_votes` (a quién) sin relación ni policies; todo por RPC
-  (`get_mvp_status`, `cast_mvp_vote`, `close_mvp_voting`). Se cierra sola con el último voto;
+  (`get_mvp_status`, `cast_mvp_vote`, `close_mvp_voting`). El voto se puede cambiar mientras esté
+  abierta (cada voto lleva `voter_key` = HMAC con secreto en Supabase Vault, nunca el votante).
+  NO se cierra sola: solo un admin la cierra. Cuentan los votos de los asistentes con cuenta al cerrar;
   empate = MVP compartido en `match_mvps`; no se permite autovoto.
 - Enlace único por partido: `/convocatoria/[id]` (lo comparte un admin por WhatsApp).
 - No activar "Leaked password protection" en Supabase Auth: rechazaría PINs numéricos.

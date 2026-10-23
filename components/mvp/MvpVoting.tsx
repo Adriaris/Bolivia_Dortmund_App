@@ -45,6 +45,7 @@ export default function MvpVoting({
   const missing = Math.max(0, status.eligible - status.voted)
   const pct = status.eligible > 0 ? Math.round((status.voted / status.eligible) * 100) : 0
   const choices = candidates.filter((c) => c.player.id !== meId)
+  const myVote = candidates.find((c) => c.player.id === status.me_voted_player_id) ?? null
 
   const handleVote = async () => {
     if (!selected) return
@@ -97,7 +98,9 @@ export default function MvpVoting({
           />
         </div>
         <p className="text-[11px] text-zinc-600 mt-2">
-          El resultado se desvela cuando hayan votado todos o cuando un admin cierre la votación.
+          {status.all_voted
+            ? 'Han votado todos. El MVP se desvela cuando un admin cierre la votación.'
+            : 'El MVP se desvela cuando un admin cierre la votación. Hasta entonces puedes cambiar tu voto.'}
         </p>
       </div>
 
@@ -106,20 +109,27 @@ export default function MvpVoting({
         <div className="flex justify-center py-6">
           <Loader2 size={20} className="animate-spin text-zinc-600" />
         </div>
-      ) : status.me_has_voted ? (
-        <div className="flex items-center gap-3 rounded-2xl bg-emerald-950/30 border border-emerald-900/40 px-4 py-4">
-          <CheckCircle2 size={22} className="text-emerald-400 shrink-0" />
-          <div>
-            <p className="text-sm font-bold text-white">Voto registrado · es anónimo</p>
-            <p className="text-xs text-zinc-500 mt-0.5">Nadie sabrá a quién has votado.</p>
-          </div>
-        </div>
       ) : status.can_vote ? (
-        <section>
-          <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-1 px-1">
-            ¿Quién ha sido el mejor?
-          </h3>
-          <p className="text-xs text-zinc-600 mb-3 px-1">Toca a un compañero. El voto es anónimo y no se puede cambiar.</p>
+        <section className="flex flex-col gap-3">
+          {status.me_has_voted && (
+            <div className="flex items-center gap-3 rounded-2xl bg-emerald-950/30 border border-emerald-900/40 px-4 py-4">
+              <CheckCircle2 size={22} className="text-emerald-400 shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-white">
+                  Has votado a {myVote ? displayName(myVote.player) : 'un compañero'}
+                </p>
+                <p className="text-xs text-zinc-500 mt-0.5">Es anónimo: solo tú ves tu voto. Puedes cambiarlo abajo.</p>
+              </div>
+            </div>
+          )}
+          <div className="px-1">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-1">
+              {status.me_has_voted ? '¿Cambiar tu voto?' : '¿Quién ha sido el mejor?'}
+            </h3>
+            <p className="text-xs text-zinc-600">
+              Toca a un compañero. El voto es anónimo y puedes cambiarlo hasta que se cierre la votación.
+            </p>
+          </div>
           {choices.length === 0 ? (
             <p className="text-xs text-zinc-600 px-1">No hay otros asistentes a los que votar.</p>
           ) : (
@@ -128,8 +138,14 @@ export default function MvpVoting({
                 <li key={c.player.id}>
                   <button
                     type="button"
+                    disabled={c.player.id === status.me_voted_player_id}
+                    aria-pressed={c.player.id === status.me_voted_player_id}
                     onClick={() => { setError(null); setSelected(c) }}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-[#141414] border border-[#2a2a2a] text-left hover:border-bol-yellow/60 active:bg-[#1f1f1f] transition-colors touch-manipulation"
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border text-left transition-colors touch-manipulation ${
+                      c.player.id === status.me_voted_player_id
+                        ? 'bg-bol-yellow/10 border-bol-yellow/60 cursor-default'
+                        : 'bg-[#141414] border-[#2a2a2a] hover:border-bol-yellow/60 active:bg-[#1f1f1f]'
+                    }`}
                   >
                     <span className="w-9 h-9 shrink-0 rounded-full bg-[#1f1f1f] flex items-center justify-center text-sm font-black text-bol-yellow tabular-nums">
                       {c.number}
@@ -137,7 +153,13 @@ export default function MvpVoting({
                     <span className="flex-1 min-w-0 text-sm font-semibold text-white truncate">
                       {displayName(c.player)}
                     </span>
-                    <Star size={16} className="text-zinc-700 shrink-0" />
+                    {c.player.id === status.me_voted_player_id ? (
+                      <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-bol-yellow shrink-0">
+                        <Star size={14} className="fill-bol-yellow" /> Tu voto
+                      </span>
+                    ) : (
+                      <Star size={16} className="text-zinc-700 shrink-0" />
+                    )}
                   </button>
                 </li>
               ))}
@@ -185,7 +207,7 @@ export default function MvpVoting({
             <p className="text-xs text-zinc-500">
               {status.eligible === 0
                 ? 'Nadie puede votar todavía: marca quién jugó y que tengan cuenta.'
-                : 'No falta nadie.'}
+                : 'Han votado todos. Cuando quieras, cierra la votación para desvelar el MVP.'}
             </p>
           ) : (
             <p className="text-sm text-zinc-300 leading-relaxed">
@@ -200,12 +222,21 @@ export default function MvpVoting({
       )}
 
       {selected && (
-        <Modal title="Confirmar voto" onClose={() => !busy && setSelected(null)}>
+        <Modal title={status.me_has_voted ? 'Cambiar voto' : 'Confirmar voto'} onClose={() => !busy && setSelected(null)}>
           <div className="flex flex-col gap-4 pb-2">
             <p className="text-sm text-zinc-300">
-              ¿Votar a <span className="font-bold text-white">{displayName(selected.player)}</span> como MVP del partido?
+              {status.me_has_voted && myVote ? (
+                <>
+                  ¿Cambiar tu voto de <span className="font-bold text-white">{displayName(myVote.player)}</span> a{' '}
+                  <span className="font-bold text-white">{displayName(selected.player)}</span>?
+                </>
+              ) : (
+                <>
+                  ¿Votar a <span className="font-bold text-white">{displayName(selected.player)}</span> como MVP del partido?
+                </>
+              )}
             </p>
-            <p className="text-xs text-zinc-500">El voto es anónimo y no se puede cambiar.</p>
+            <p className="text-xs text-zinc-500">El voto es anónimo. Podrás cambiarlo hasta que un admin cierre la votación.</p>
             {error && <p className="text-sm text-red-400">{error}</p>}
             <div className="grid grid-cols-2 gap-3">
               <Button variant="secondary" size="lg" onClick={() => setSelected(null)} disabled={busy}>
@@ -213,7 +244,7 @@ export default function MvpVoting({
               </Button>
               <Button variant="primary" size="lg" onClick={handleVote} disabled={busy}>
                 {busy ? <Loader2 size={16} className="animate-spin" /> : <Star size={16} />}
-                Votar
+                {status.me_has_voted ? 'Cambiar' : 'Votar'}
               </Button>
             </div>
           </div>
