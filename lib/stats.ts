@@ -1,4 +1,4 @@
-import type { MatchEvent, MatchEventWithPlayers, Player, PlayerStats } from './types'
+import type { MatchEvent, MatchEventWithPlayers, MatchMvp, Player, PlayerStats } from './types'
 
 /**
  * Calcula las estadísticas individuales de todos los jugadores
@@ -6,9 +6,13 @@ import type { MatchEvent, MatchEventWithPlayers, Player, PlayerStats } from './t
  */
 export function computePlayerStats(
   players: Player[],
-  events: (MatchEvent | MatchEventWithPlayers)[]
+  events: (MatchEvent | MatchEventWithPlayers)[],
+  mvps: Pick<MatchMvp, 'player_id'>[] = []
 ): PlayerStats[] {
   const ourEvents = events.filter((e) => e.team_side === 'ours')
+
+  const mvpsMap = new Map<string, number>()
+  for (const m of mvps) mvpsMap.set(m.player_id, (mvpsMap.get(m.player_id) ?? 0) + 1)
 
   const goalsMap = new Map<string, number>()
   const assistsMap = new Map<string, number>()
@@ -49,6 +53,7 @@ export function computePlayerStats(
         assists,
         participations: goals + assists,
         saves,
+        mvps: mvpsMap.get(player.id) ?? 0,
       }
     })
     .sort((a, b) => {
@@ -66,6 +71,7 @@ export function filterPlayerStats(stats: PlayerStats[]): {
   topAssists: PlayerStats[]
   topParticipations: PlayerStats[]
   topSaves: PlayerStats[]
+  topMvps: PlayerStats[]
 } {
   const topScorers = [...stats]
     .filter((s) => s.goals > 0)
@@ -83,5 +89,9 @@ export function filterPlayerStats(stats: PlayerStats[]): {
     .filter((s) => s.saves > 0)
     .sort((a, b) => b.saves - a.saves)
 
-  return { topScorers, topAssists, topParticipations, topSaves }
+  const topMvps = [...stats]
+    .filter((s) => s.mvps > 0)
+    .sort((a, b) => b.mvps - a.mvps)
+
+  return { topScorers, topAssists, topParticipations, topSaves, topMvps }
 }

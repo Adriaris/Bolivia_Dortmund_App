@@ -61,7 +61,7 @@ export default async function TemporadaPage({
     Promise.all(matches.map((m) => getMatchEvents(m.id).catch(() => []))),
     getMvpsForMatches(matches),
   ])
-  const stats = computePlayerStats(playersOfSeason, eventsArrays.flat())
+  const stats = computePlayerStats(playersOfSeason, eventsArrays.flat(), Object.values(mvps).flat())
 
   const ourStanding = standings.find(
     (s) => s.team.toLowerCase() === OUR_STANDINGS_TEAM.toLowerCase()

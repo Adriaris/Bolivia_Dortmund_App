@@ -78,7 +78,8 @@ export default function MvpReveal({ mvps, results, playersById, numberById, cele
                 </span>
                 <p className="text-lg font-black text-white leading-tight">{displayName(playerFor(w.id))}</p>
                 <p className="text-xs text-zinc-400 tabular-nums">
-                  {w.votes} {w.votes === 1 ? 'voto' : 'votos'}
+                  {/* votes = 0 → MVP cargado a mano (votación hecha fuera de la app) */}
+                  {w.votes > 0 ? `${w.votes} ${w.votes === 1 ? 'voto' : 'votos'}` : 'Votación por WhatsApp'}
                 </p>
               </div>
             )

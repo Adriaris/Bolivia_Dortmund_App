@@ -1,10 +1,10 @@
 import CaptainBadge from '@/components/ui/CaptainBadge'
 import GuestBadge from '@/components/ui/GuestBadge'
-import type { PlayerStats } from '@/lib/types'
+import type { PlayerStats, StatMode } from '@/lib/types'
 
 interface PlayerStatsTableProps {
   stats: PlayerStats[]
-  mode: 'goals' | 'assists' | 'participations' | 'saves'
+  mode: StatMode
 }
 
 const config: Record<string, { col: string; accessor: keyof PlayerStats }> = {
@@ -12,6 +12,7 @@ const config: Record<string, { col: string; accessor: keyof PlayerStats }> = {
   assists:        { col: 'Asistencias',    accessor: 'assists' },
   participations: { col: 'Participaciones', accessor: 'participations' },
   saves:          { col: 'Paradas',        accessor: 'saves' },
+  mvps:           { col: 'MVPs',           accessor: 'mvps' },
 }
 
 export default function PlayerStatsTable({ stats, mode }: PlayerStatsTableProps) {

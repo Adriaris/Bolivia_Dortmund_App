@@ -14,6 +14,7 @@ import MvpReveal from '@/components/mvp/MvpReveal'
 import { getMatch } from '@/lib/supabase/queries'
 import { supabase } from '@/lib/supabase/client'
 import {
+  displayName,
   mvpTitle,
   attendanceErrorMessage,
   castMvpVote,
@@ -479,6 +480,13 @@ export default function ConvocatoriaClient({
             playersById={playersById}
             numberById={numberById}
           />
+          {mvps.length > 0 && (
+            <ShareConvocatoriaButton
+              match={match}
+              variant="block"
+              mvpNames={mvps.map((m) => displayName(playersById[m.player_id] ?? m.player))}
+            />
+          )}
           {matchLink}
         </>
       )}

@@ -76,8 +76,9 @@ export default function MatchMvpPanel({ match, initialMvps, isAdmin }: MatchMvpP
             {mvps.map((m) => displayName(m.player)).join(' y ')}
           </p>
           <p className="text-xs text-zinc-500 tabular-nums">
-            {mvps[0].votes} {mvps[0].votes === 1 ? 'voto' : 'votos'}
-            {shared ? ' cada uno' : ''}
+            {mvps[0].votes > 0
+              ? `${mvps[0].votes} ${mvps[0].votes === 1 ? 'voto' : 'votos'}${shared ? ' cada uno' : ''}`
+              : 'Votación por WhatsApp'}
           </p>
         </div>
         <ChevronRight size={16} className="text-zinc-600 shrink-0" />

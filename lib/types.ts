@@ -113,7 +113,11 @@ export interface PlayerStats {
   assists: number
   participations: number
   saves: number
+  mvps: number   // partidos en los que ha sido MVP (incluye MVP compartido)
 }
+
+// Pestañas de estadísticas (podio + tabla)
+export type StatMode = 'goals' | 'assists' | 'participations' | 'saves' | 'mvps'
 
 export interface Standing {
   id: number

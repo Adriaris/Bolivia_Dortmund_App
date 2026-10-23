@@ -4,15 +4,19 @@ import { useState } from 'react'
 import { Check, Share2 } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { OUR_TEAM } from '@/lib/teams'
+import { mvpTitle } from '@/lib/supabase/mvp'
 import type { Match } from '@/lib/types'
 
-type ShareableMatch = Pick<Match, 'id' | 'opponent_name' | 'match_date' | 'match_time' | 'status'>
+type ShareableMatch = Pick<Match, 'id' | 'opponent_name' | 'match_date' | 'match_time' | 'status'> &
+  Partial<Pick<Match, 'our_score' | 'opponent_score'>>
 
 interface ShareConvocatoriaButtonProps {
   match: ShareableMatch
   /** 'chip' = botón compacto bajo una tarjeta · 'block' = botón ancho */
   variant?: 'chip' | 'block'
   className?: string
+  /** Votación cerrada: nombres del MVP (o de los MVP si hay empate) → comparte el resultado */
+  mvpNames?: string[]
 }
 
 function formatShareDate(match: ShareableMatch): string {
@@ -25,8 +29,19 @@ function formatShareDate(match: ShareableMatch): string {
   return match.match_time ? `${date} ${match.match_time}h` : date
 }
 
-export function buildShareText(match: ShareableMatch, origin: string): string {
+export function buildShareText(match: ShareableMatch, origin: string, mvpNames?: string[]): string {
   const url = `${origin}/convocatoria/${match.id}`
+  if (mvpNames && mvpNames.length > 0) {
+    const score =
+      match.our_score != null && match.opponent_score != null
+        ? ` ${match.our_score}-${match.opponent_score} `
+        : ' vs '
+    const who =
+      mvpNames.length === 1
+        ? `${mvpNames[0]}, MVP del partido`
+        : `${mvpTitle(mvpNames.length)}: ${mvpNames.slice(0, -1).join(', ')} y ${mvpNames[mvpNames.length - 1]}`
+    return `🏆 ${who}\n${OUR_TEAM}${score}${match.opponent_name}\nMira la votación:\n${url}`
+  }
   if (match.status === 'finished') {
     return `⭐ ${OUR_TEAM} vs ${match.opponent_name}\nSi jugaste, vota al MVP del partido (es anónimo):\n${url}`
   }
@@ -38,16 +53,22 @@ export default function ShareConvocatoriaButton({
   match,
   variant = 'chip',
   className = '',
+  mvpNames,
 }: ShareConvocatoriaButtonProps) {
   const { isAdmin } = useAuth()
   const [opened, setOpened] = useState(false)
 
   if (!isAdmin) return null
 
-  const label = match.status === 'finished' ? 'Compartir votación MVP' : 'Compartir convocatoria'
+  const label =
+    mvpNames && mvpNames.length > 0
+      ? 'Compartir MVP'
+      : match.status === 'finished'
+        ? 'Compartir votación MVP'
+        : 'Compartir convocatoria'
 
   const handleShare = async () => {
-    const text = buildShareText(match, window.location.origin)
+    const text = buildShareText(match, window.location.origin, mvpNames)
     if (typeof navigator.share === 'function') {
       try {
         await navigator.share({ text })

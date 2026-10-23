@@ -1,8 +1,8 @@
-import type { PlayerStats } from '@/lib/types'
+import type { PlayerStats, StatMode } from '@/lib/types'
 
 interface StatsPodiumProps {
   stats: PlayerStats[]
-  mode: 'goals' | 'assists' | 'participations' | 'saves'
+  mode: StatMode
 }
 
 const accessor: Record<string, keyof PlayerStats> = {
@@ -10,6 +10,7 @@ const accessor: Record<string, keyof PlayerStats> = {
   assists: 'assists',
   participations: 'participations',
   saves: 'saves',
+  mvps: 'mvps',
 }
 
 const medals = [
