@@ -5,6 +5,7 @@ import { GiBoxingGlove } from 'react-icons/gi'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import CaptainBadge from '@/components/ui/CaptainBadge'
+import GuestBadge from '@/components/ui/GuestBadge'
 import type { Player } from '@/lib/types'
 
 interface SaveModalProps {
@@ -53,6 +54,7 @@ export default function SaveModal({ players, onSave, onClose, loading }: SaveMod
               {p.position}
             </span>
             {p.is_captain && <CaptainBadge inverted={goalkeeperPlayerId === p.id} />}
+            {p.is_guest && <GuestBadge inverted={goalkeeperPlayerId === p.id} />}
             {p.number === GOALKEEPER_NUMBER && (
               <span className={`text-[10px] font-bold uppercase tracking-wide ${
                 goalkeeperPlayerId === p.id ? 'text-black/60' : 'text-cyan-500'

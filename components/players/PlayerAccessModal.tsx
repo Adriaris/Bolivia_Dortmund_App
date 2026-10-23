@@ -137,6 +137,39 @@ export default function PlayerAccessModal({
     if (nextPath) router.push(nextPath)
   }
 
+  const squad = players.filter((p) => !p.is_guest)
+  const guests = players.filter((p) => p.is_guest)
+
+  const renderPickList = (list: Player[]) => (
+    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+      {list.map((p, i) => {
+        const registered = registeredIds.has(p.id)
+        return (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => pickPlayer(p)}
+            className={[
+              'w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-[#222] active:bg-[#262626] transition-colors',
+              i < list.length - 1 ? 'border-b border-[#2a2a2a]' : '',
+            ].join(' ')}
+          >
+            <span className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2a2a2a] text-white font-black text-sm shrink-0">
+              {p.number}
+            </span>
+            <span className="flex-1 min-w-0 text-white text-sm font-medium truncate">{p.name}</span>
+            {registered && (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-bol-green/15 border border-bol-green/40 px-2 py-0.5 rounded-full">
+                Registrado
+              </span>
+            )}
+            <ChevronRight size={16} className="text-zinc-600 shrink-0" />
+          </button>
+        )
+      })}
+    </div>
+  )
+
   const pinsMatch = pin.length === 6 && pin === pinConfirm
   const mismatch = pinConfirm.length === 6 && pin !== pinConfirm
 
@@ -152,33 +185,19 @@ export default function PlayerAccessModal({
             </span>
           </p>
 
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden">
-            {players.map((p, i) => {
-              const registered = registeredIds.has(p.id)
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => pickPlayer(p)}
-                  className={[
-                    'w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-[#222] active:bg-[#262626] transition-colors',
-                    i < players.length - 1 ? 'border-b border-[#2a2a2a]' : '',
-                  ].join(' ')}
-                >
-                  <span className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2a2a2a] text-white font-black text-sm shrink-0">
-                    {p.number}
-                  </span>
-                  <span className="flex-1 min-w-0 text-white text-sm font-medium truncate">{p.name}</span>
-                  {registered && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-bol-green/15 border border-bol-green/40 px-2 py-0.5 rounded-full">
-                      Registrado
-                    </span>
-                  )}
-                  <ChevronRight size={16} className="text-zinc-600 shrink-0" />
-                </button>
-              )
-            })}
-          </div>
+          {renderPickList(squad)}
+
+          {guests.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <div className="px-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Invitados</p>
+                <p className="text-[11px] text-zinc-600 mt-0.5">
+                  Si eres invitado, solo podrás votar en los partidos a los que te apunte un admin.
+                </p>
+              </div>
+              {renderPickList(guests)}
+            </div>
+          )}
         </div>
       )}
 

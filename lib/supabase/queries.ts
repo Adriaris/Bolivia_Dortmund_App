@@ -27,18 +27,42 @@ export async function getPlayers(): Promise<Player[]> {
   return data
 }
 
-export async function createPlayer(player: {
-  number: number
-  name: string
-  position: string
-}): Promise<Player> {
+export async function createPlayer(
+  player: {
+    number: number
+    name: string
+    position: string
+    is_guest?: boolean
+  },
+  tournamentId?: string | null
+): Promise<Player> {
   const { data, error } = await supabase
     .from('players')
-    .insert({ ...player, active: true })
+    .insert({ ...player, is_guest: player.is_guest ?? false, active: true })
     .select()
     .single()
   if (error) throw error
+  // Alta a mitad de split: entra en la foto del torneo activo (convocatoria y archivo)
+  if (tournamentId) {
+    const { error: tpError } = await supabase.from('tournament_players').upsert(
+      {
+        tournament_id: tournamentId,
+        player_id: data.id,
+        number: data.number,
+        position: data.position,
+        is_captain: false,
+      },
+      { onConflict: 'tournament_id,player_id', ignoreDuplicates: true }
+    )
+    if (tpError) throw tpError
+  }
   return data
+}
+
+/** Admin: pasa un jugador de la plantilla a invitado o al revés. */
+export async function setPlayerGuest(playerId: string, isGuest: boolean): Promise<void> {
+  const { error } = await supabase.from('players').update({ is_guest: isGuest }).eq('id', playerId)
+  if (error) throw error
 }
 
 // ============================================================

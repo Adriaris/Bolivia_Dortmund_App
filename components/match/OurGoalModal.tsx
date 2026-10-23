@@ -6,6 +6,7 @@ import { GiSoccerBall, GiRunningShoe, GiGoalKeeper } from 'react-icons/gi'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import CaptainBadge from '@/components/ui/CaptainBadge'
+import GuestBadge from '@/components/ui/GuestBadge'
 import type { GoalType, Player } from '@/lib/types'
 
 interface OurGoalModalProps {
@@ -41,6 +42,7 @@ function PlayerButton({
       <span className="font-medium text-white flex-1 text-sm">{player.name}</span>
       <span className="text-xs text-zinc-600">{player.position}</span>
       {player.is_captain && <CaptainBadge />}
+      {player.is_guest && <GuestBadge />}
       <ChevronRight size={14} className="text-zinc-600" />
     </button>
   )

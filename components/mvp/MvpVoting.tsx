@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CheckCircle2, Loader2, Lock, Star, UserRound } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
+import GuestBadge from '@/components/ui/GuestBadge'
 import { displayName } from '@/lib/supabase/mvp'
 import type { MvpStatus, Player } from '@/lib/types'
 
@@ -152,6 +153,7 @@ export default function MvpVoting({
                     </span>
                     <span className="flex-1 min-w-0 text-sm font-semibold text-white truncate">
                       {displayName(c.player)}
+                      {c.player.is_guest && <GuestBadge />}
                     </span>
                     {c.player.id === status.me_voted_player_id ? (
                       <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-bol-yellow shrink-0">

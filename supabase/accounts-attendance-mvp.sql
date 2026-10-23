@@ -621,3 +621,105 @@ set search_path = '' as $$
 $$;
 revoke execute on function public.match_accepts_attendance(uuid) from public, anon;
 grant execute on function public.match_accepts_attendance(uuid) to authenticated;
+
+-- ============================================================
+-- v4 (2026-10-23): jugadores invitados
+-- ============================================================
+-- players.is_guest: externos que vienen a algún partido. Son jugadores a todos
+-- los efectos (goles, asistencias, paradas, estadísticas, MVP) y se registran
+-- con PIN como el resto, pero NO pueden marcar su propia asistencia: solo un
+-- admin los apunta a un partido. Como la votación exige ser asistente, un
+-- invitado solo vota en los partidos en los que un admin lo ha marcado.
+alter table players add column if not exists is_guest boolean not null default false;
+
+create or replace function public.current_player_is_guest()
+returns boolean language sql stable security definer
+set search_path = '' as $$
+  select coalesce((
+    select p.is_guest
+    from public.player_accounts pa
+    join public.players p on p.id = pa.player_id
+    where pa.user_id = auth.uid()
+  ), false)
+$$;
+revoke execute on function public.current_player_is_guest() from public, anon;
+grant execute on function public.current_player_is_guest() to authenticated;
+
+drop policy if exists "attendance_self_insert" on match_attendance;
+create policy "attendance_self_insert"
+  on match_attendance for insert to authenticated
+  with check (
+    player_id = public.current_player_id()
+    and not public.current_player_is_guest()
+    and updated_by_admin = false
+    and public.match_accepts_attendance(match_id)
+  );
+
+drop policy if exists "attendance_self_update" on match_attendance;
+create policy "attendance_self_update"
+  on match_attendance for update to authenticated
+  using (
+    player_id = public.current_player_id()
+    and not public.current_player_is_guest()
+    and public.match_accepts_attendance(match_id)
+  )
+  with check (
+    player_id = public.current_player_id()
+    and not public.current_player_is_guest()
+    and updated_by_admin = false
+    and public.match_accepts_attendance(match_id)
+  );
+
+-- Snapshot del split: quien juega un partido de un torneo (asistencia 'yes' o
+-- gol/asistencia/parada nuestra) entra en tournament_players de ese torneo, para
+-- que el archivo de temporadas incluya a invitados y fichajes a mitad de split.
+create or replace function public.ensure_tournament_player(p_match_id uuid, p_player_id uuid)
+returns void language sql security definer
+set search_path = '' as $$
+  insert into public.tournament_players (tournament_id, player_id, number, position, is_captain)
+  select m.tournament_id, p.id, p.number, p.position, false
+  from public.matches m
+  join public.players p on p.id = p_player_id
+  where m.id = p_match_id and m.tournament_id is not null
+  on conflict (tournament_id, player_id) do nothing
+$$;
+revoke execute on function public.ensure_tournament_player(uuid, uuid) from public, anon, authenticated;
+
+create or replace function public.trg_attendance_snapshot()
+returns trigger language plpgsql security definer
+set search_path = '' as $$
+begin
+  if new.status = 'yes' then
+    perform public.ensure_tournament_player(new.match_id, new.player_id);
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function public.trg_attendance_snapshot() from public, anon, authenticated;
+
+create or replace function public.trg_event_snapshot()
+returns trigger language plpgsql security definer
+set search_path = '' as $$
+begin
+  if new.team_side = 'ours' then
+    if new.scorer_player_id is not null then
+      perform public.ensure_tournament_player(new.match_id, new.scorer_player_id);
+    end if;
+    if new.assist_player_id is not null then
+      perform public.ensure_tournament_player(new.match_id, new.assist_player_id);
+    end if;
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function public.trg_event_snapshot() from public, anon, authenticated;
+
+drop trigger if exists match_attendance_snapshot on match_attendance;
+create trigger match_attendance_snapshot
+  after insert or update of status on match_attendance
+  for each row execute function public.trg_attendance_snapshot();
+
+drop trigger if exists match_events_snapshot on match_events;
+create trigger match_events_snapshot
+  after insert or update of scorer_player_id, assist_player_id on match_events
+  for each row execute function public.trg_event_snapshot();

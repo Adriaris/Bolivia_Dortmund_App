@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import { getMatch, getPlayers, getTournamentPlayers } from '@/lib/supabase/queries'
+import { getMatch, getTournamentPlayers } from '@/lib/supabase/queries'
 import {
   getAllPlayers,
   getMatchAttendance,
@@ -56,13 +56,13 @@ export default async function ConvocatoriaPage(props: PageProps<'/convocatoria/[
     match.tournament_id ? getTournamentPlayers(match.tournament_id).catch(() => []) : Promise.resolve([]),
     match.mvp_closed_at ? getMatchMvps(id).catch(() => []) : Promise.resolve([]),
   ])
-  let roster: RosterEntry[] = tournamentRoster
-    .filter((tp) => tp.player?.active)
-    .map((tp) => ({ player: tp.player, number: tp.number }))
-  if (roster.length === 0) {
-    const active = await getPlayers().catch(() => [])
-    roster = active.map((p) => ({ player: p, number: p.number }))
-  }
+  // Plantilla = jugadores activos no invitados (incluye altas a mitad de split);
+  // invitados aparte. Dorsal del split si está en la foto del torneo.
+  const numberInSplit = new Map(tournamentRoster.map((tp) => [tp.player_id, tp.number]))
+  const active = players.filter((p) => p.active)
+  const toEntry = (p: (typeof players)[number]): RosterEntry => ({ player: p, number: numberInSplit.get(p.id) ?? p.number })
+  const roster: RosterEntry[] = active.filter((p) => !p.is_guest).map(toEntry)
+  const guests: RosterEntry[] = active.filter((p) => p.is_guest).map(toEntry)
 
   return (
     <main className="safe-top min-h-screen bg-black px-4 py-6 max-w-lg mx-auto pb-10">
@@ -81,6 +81,7 @@ export default async function ConvocatoriaPage(props: PageProps<'/convocatoria/[
         initialMatch={match}
         players={players}
         roster={roster}
+        guests={guests}
         initialAttendance={attendance}
         registeredIds={registeredIds}
         initialMvps={mvps}

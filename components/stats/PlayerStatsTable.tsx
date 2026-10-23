@@ -1,4 +1,5 @@
 import CaptainBadge from '@/components/ui/CaptainBadge'
+import GuestBadge from '@/components/ui/GuestBadge'
 import type { PlayerStats } from '@/lib/types'
 
 interface PlayerStatsTableProps {
@@ -41,6 +42,7 @@ export default function PlayerStatsTable({ stats, mode }: PlayerStatsTableProps)
               <span className="ml-2 text-xs text-zinc-600 inline-flex items-center gap-1">
                 {s.player.number} · {s.player.position}
                 {s.player.is_captain && <CaptainBadge />}
+                {s.player.is_guest && <GuestBadge />}
               </span>
             </td>
             <td className="py-3.5 text-right font-black text-white text-lg">

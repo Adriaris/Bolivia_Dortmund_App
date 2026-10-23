@@ -3,10 +3,13 @@
 import { Check, Loader2, RotateCcw, ShieldCheck, X } from 'lucide-react'
 import { displayName, type MatchAttendanceWithPlayer } from '@/lib/supabase/mvp'
 import type { AttendanceStatus, Player } from '@/lib/types'
+import GuestBadge from '@/components/ui/GuestBadge'
 import type { RosterEntry } from './types'
 
 interface AttendanceListsProps {
   roster: RosterEntry[]
+  /** Invitados activos: solo un admin los apunta (sección propia) */
+  guests?: RosterEntry[]
   attendance: MatchAttendanceWithPlayer[]
   numberById: Record<string, number>
   registeredIds: Set<string>
@@ -31,6 +34,7 @@ interface RowData {
 
 export default function AttendanceLists({
   roster,
+  guests = [],
   attendance,
   numberById,
   registeredIds,
@@ -60,6 +64,10 @@ export default function AttendanceLists({
   const pending: RowData[] = roster
     .filter((r) => !answered.has(r.player.id))
     .map((r) => ({ player: r.player, number: r.number, status: null, byAdmin: false }))
+  const pendingGuests: RowData[] = guests
+    .filter((r) => !answered.has(r.player.id))
+    .map((r) => ({ player: r.player, number: r.number, status: null, byAdmin: false }))
+    .sort(byNumber)
 
   const unregisteredYes = yes.filter((r) => !registeredIds.has(r.player.id)).length
 
@@ -85,6 +93,7 @@ export default function AttendanceLists({
         <div className="flex-1 min-w-0">
           <p className={`text-sm truncate ${tone === 'none' ? 'text-zinc-400' : 'text-white font-medium'}`}>
             {displayName(row.player)}
+            {row.player.is_guest && <GuestBadge />}
             {isMe && <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-bol-yellow">tú</span>}
           </p>
           {(tone === 'yes' && !registeredIds.has(row.player.id)) || row.byAdmin ? (
@@ -183,6 +192,15 @@ export default function AttendanceLists({
       )}
       {showNo && section(noTitle, no, 'no', 'bg-red-500', 'Nadie')}
       {showNoResponse && section('Sin responder', pending, 'none', 'bg-zinc-600', 'Han respondido todos')}
+      {editable && guests.length > 0 &&
+        section(
+          'Invitados',
+          pendingGuests,
+          'none',
+          'bg-sky-500',
+          'Todos los invitados están en las listas de arriba',
+          'los apunta un admin'
+        )}
     </div>
   )
 }

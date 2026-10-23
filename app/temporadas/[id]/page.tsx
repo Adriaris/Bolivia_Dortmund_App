@@ -13,6 +13,7 @@ import { OUR_STANDINGS_TEAM } from '@/lib/teams'
 import MatchCard from '@/components/matches/MatchCard'
 import { getMvpsForMatches } from '@/lib/supabase/mvp'
 import CaptainBadge from '@/components/ui/CaptainBadge'
+import GuestBadge from '@/components/ui/GuestBadge'
 import StandingsTable from '@/app/clasificacion/StandingsTable'
 import ArchiveStatsTabs from './ArchiveStatsTabs'
 import type { Player, Position } from '@/lib/types'
@@ -175,6 +176,7 @@ export default async function TemporadaPage({
                     <p className="text-zinc-600 text-xs flex items-center">
                       {positionLabel[tp.position as Position] ?? tp.position}
                       {tp.is_captain && <CaptainBadge />}
+                      {tp.player.is_guest && <GuestBadge />}
                     </p>
                   </div>
                   <span className="text-xs font-bold text-zinc-700 uppercase">{tp.position}</span>

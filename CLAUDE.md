@@ -87,6 +87,11 @@ jugados y rutas de los escudos de los rivales. Sirve para el seed inicial de la 
   NO se cierra sola: solo un admin la cierra. Cuentan los votos de los asistentes con cuenta al cerrar;
   empate = MVP compartido en `match_mvps`; no se permite autovoto.
 - Enlace único por partido: `/convocatoria/[id]` (lo comparte un admin por WhatsApp).
+- **Invitados** (`players.is_guest`): externos que juegan algún partido. Salen en Plantilla en su
+  apartado, en los formularios de gol/parada y en estadísticas (etiqueta INV), se registran con PIN,
+  pero NO marcan su asistencia (RLS): solo un admin los apunta, y por tanto solo votan donde jugaron.
+- Foto del split: un trigger mete en `tournament_players` a quien juega un partido del torneo
+  (asistencia 'yes' o gol/asistencia nuestra), así el archivo incluye invitados y altas a mitad de split.
 - No activar "Leaked password protection" en Supabase Auth: rechazaría PINs numéricos.
 
 ## Reglas heredadas (idénticas al Chevere)

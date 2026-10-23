@@ -40,6 +40,7 @@ interface ConvocatoriaClientProps {
   initialMatch: Match
   players: Player[]
   roster: RosterEntry[]
+  guests: RosterEntry[]
   initialAttendance: MatchAttendanceWithPlayer[]
   registeredIds: string[]
   initialMvps: MatchMvpWithPlayer[]
@@ -75,6 +76,7 @@ export default function ConvocatoriaClient({
   initialMatch,
   players,
   roster,
+  guests,
   initialAttendance,
   registeredIds,
   initialMvps,
@@ -130,9 +132,9 @@ export default function ConvocatoriaClient({
   const numberById = useMemo(() => {
     const map: Record<string, number> = {}
     for (const p of players) map[p.id] = p.number
-    for (const r of roster) map[r.player.id] = r.number // dorsal del split
+    for (const r of [...roster, ...guests]) map[r.player.id] = r.number // dorsal del split
     return map
-  }, [players, roster])
+  }, [players, roster, guests])
 
   const candidates: MvpCandidate[] = useMemo(
     () =>
@@ -144,6 +146,8 @@ export default function ConvocatoriaClient({
   )
 
   const myRow = playerId ? attendance.find((a) => a.player_id === playerId) ?? null : null
+  // Los invitados no marcan su asistencia: los apunta un admin
+  const meIsGuest = playerId ? playersById[playerId]?.is_guest === true : false
 
   // ── Carga ─────────────────────────────────────────────────
   const loadMvps = useCallback(async () => {
@@ -290,6 +294,15 @@ export default function ConvocatoriaClient({
             <div className="flex justify-center py-8">
               <Loader2 size={20} className="animate-spin text-zinc-600" />
             </div>
+          ) : playerId && meIsGuest ? (
+            <div className="flex items-start gap-3 rounded-2xl bg-[#141414] border border-[#2a2a2a] px-4 py-4">
+              <UserRound size={20} className="text-sky-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-zinc-300">
+                {myRow?.status === 'yes'
+                  ? 'Estás apuntado a este partido. Al terminar podrás votar al MVP.'
+                  : 'Eres invitado: un admin te apunta a los partidos en los que juegas. Así podrás votar al MVP.'}
+              </p>
+            </div>
           ) : playerId ? (
             <section>
               <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3 px-1">¿Vienes?</h2>
@@ -321,6 +334,7 @@ export default function ConvocatoriaClient({
 
           <AttendanceLists
             roster={roster}
+            guests={guests}
             attendance={attendance}
             numberById={numberById}
             registeredIds={registered}
@@ -360,6 +374,7 @@ export default function ConvocatoriaClient({
           {actionError && <p className="text-sm text-red-400 text-center">{actionError}</p>}
           <AttendanceLists
             roster={roster}
+            guests={guests}
             attendance={attendance}
             numberById={numberById}
             registeredIds={registered}
@@ -424,6 +439,7 @@ export default function ConvocatoriaClient({
                 {actionError && <p className="text-sm text-red-400 text-center mb-3">{actionError}</p>}
                 <AttendanceLists
                   roster={roster}
+                  guests={guests}
                   attendance={attendance}
                   numberById={numberById}
                   registeredIds={registered}

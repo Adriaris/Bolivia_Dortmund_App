@@ -40,6 +40,9 @@ export interface Player {
   is_captain: boolean
   active: boolean
   is_admin: boolean
+  // Externo que viene a algún partido: juega, puntúa y vota como los demás,
+  // pero solo un admin puede apuntarlo a un partido (no marca su asistencia)
+  is_guest: boolean
   created_at: string
 }
 
