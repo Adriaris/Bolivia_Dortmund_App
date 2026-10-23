@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Star } from 'lucide-react'
 import CelebrationConfetti from '@/components/CelebrationConfetti'
-import { displayName, type MatchMvpWithPlayer, type MvpPlayer } from '@/lib/supabase/mvp'
+import { displayName, mvpTitle, type MatchMvpWithPlayer, type MvpPlayer } from '@/lib/supabase/mvp'
 import type { MvpResult, Player } from '@/lib/types'
 
 interface MvpRevealProps {
@@ -55,7 +55,7 @@ export default function MvpReveal({ mvps, results, playersById, numberById, cele
       {celebrate && (
         <CelebrationConfetti
           independent
-          title={shared ? '¡MVP compartido!' : '¡MVP del partido!'}
+          title={`¡${mvpTitle(winners.length)}!`}
           subtitle={winnerNames}
         />
       )}
@@ -65,7 +65,7 @@ export default function MvpReveal({ mvps, results, playersById, numberById, cele
         <div className="flex items-center justify-center gap-2">
           <Star size={16} className="text-bol-yellow fill-bol-yellow" />
           <p className="text-xs font-bold uppercase tracking-widest text-bol-yellow">
-            {shared ? 'MVP compartido' : 'MVP del partido'}
+            {mvpTitle(winners.length)}
           </p>
         </div>
         <div className={`mt-4 flex ${shared ? 'flex-wrap justify-center gap-x-6 gap-y-4' : 'justify-center'}`}>

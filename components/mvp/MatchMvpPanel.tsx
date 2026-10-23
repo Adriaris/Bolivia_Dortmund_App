@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ChevronRight, Star } from 'lucide-react'
 import ConvocatoriaActions from '@/components/attendance/ConvocatoriaActions'
 import ShareConvocatoriaButton from '@/components/attendance/ShareConvocatoriaButton'
-import { displayName, getMatchMvps, type MatchMvpWithPlayer } from '@/lib/supabase/mvp'
+import { displayName, mvpTitle, getMatchMvps, type MatchMvpWithPlayer } from '@/lib/supabase/mvp'
 import type { Match } from '@/lib/types'
 
 interface MatchMvpPanelProps {
@@ -70,7 +70,7 @@ export default function MatchMvpPanel({ match, initialMvps, isAdmin }: MatchMvpP
         </span>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-widest text-bol-yellow">
-            {shared ? 'MVP compartido' : 'MVP del partido'}
+            {mvpTitle(mvps.length)}
           </p>
           <p className="text-sm font-bold text-white truncate mt-0.5">
             {mvps.map((m) => displayName(m.player)).join(' y ')}

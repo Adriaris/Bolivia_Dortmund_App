@@ -14,6 +14,7 @@ import MvpReveal from '@/components/mvp/MvpReveal'
 import { getMatch } from '@/lib/supabase/queries'
 import { supabase } from '@/lib/supabase/client'
 import {
+  mvpTitle,
   attendanceErrorMessage,
   castMvpVote,
   closeMvpVoting,
@@ -285,7 +286,16 @@ export default function ConvocatoriaClient({
 
   return (
     <div className="flex flex-col gap-6">
-      <ConvocatoriaHeader match={match} eyebrow={closedByKickoff ? 'Convocatoria cerrada' : EYEBROW[phase]} />
+      <ConvocatoriaHeader
+        match={match}
+        eyebrow={
+          closedByKickoff
+            ? 'Convocatoria cerrada'
+            : phase === 'closed' && mvps.length > 0
+              ? mvpTitle(mvps.length)
+              : EYEBROW[phase]
+        }
+      />
 
       {/* ── Fase de asistencia ── */}
       {phase === 'attendance' && (

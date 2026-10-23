@@ -21,6 +21,14 @@ export type { MvpPlayer, MatchMvpWithPlayer, MatchAttendanceWithPlayer } from '.
 
 const MVP_PLAYER_COLUMNS = 'id, number, name, alias'
 
+/** Título según cuántos empatan: empate a votos = doble (o triple) MVP. */
+export function mvpTitle(winners: number): string {
+  if (winners === 2) return 'Doble MVP'
+  if (winners === 3) return 'Triple MVP'
+  if (winners > 3) return 'MVP compartido'
+  return 'MVP del partido'
+}
+
 /** Nombre corto para la UI: alias si lo tiene, si no el nombre completo. */
 export function displayName(player: Pick<Player, 'name' | 'alias'> | null | undefined): string {
   if (!player) return 'Jugador'
