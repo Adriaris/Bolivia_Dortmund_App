@@ -22,9 +22,10 @@
 -- ============================================================
 alter table players add column if not exists is_admin boolean not null default false;
 
--- Fran Torres (7) y Adrià León (24)
+-- Fran Torres (7), Carlos Barriga (11, añadido el 23-oct) y Adrià León (24)
 update players set is_admin = true
-where id in ('b0000000-0000-4000-8000-000000000007', 'b0000000-0000-4000-8000-000000000024');
+where id in ('b0000000-0000-4000-8000-000000000007', 'b0000000-0000-4000-8000-000000000011',
+             'b0000000-0000-4000-8000-000000000024');
 
 -- ============================================================
 -- PLAYER_ACCOUNTS — vínculo usuario Auth ↔ jugador (1:1)

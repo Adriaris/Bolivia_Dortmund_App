@@ -76,7 +76,7 @@ jugados y rutas de los escudos de los rivales. Sirve para el seed inicial de la 
   (email interno `<player_id>@players.bvd04.fc`, contraseña = PIN de 6 cifras, alta
   desde "Soy jugador" en /jugadores vía `/api/players/register` con service role);
   admin = `is_admin()` en BD (cuenta legacy `admin@bvd04.fc` con `app_metadata.role='admin'`
-  o jugador con `players.is_admin`: Fran #7 y Adrià #24). `useAuth()` → `{ isAdmin, playerId, refresh }`.
+  o jugador con `players.is_admin`: Fran #7, Carlos #11 y Adrià #24). `useAuth()` → `{ isAdmin, playerId, refresh }`.
 - **Escrituras de partidos/eventos/plantilla** = solo `is_admin()` (ya NO cualquier authenticated).
 - **Asistencia**: `match_attendance`; el jugador cambia la suya hasta la hora de inicio (`match_date`+`match_time`,
   hora de Madrid) o hasta que arranque el crono, lo que llegue antes (`lib/kickoff.ts` = SQL `match_accepts_attendance`); el admin siempre.
