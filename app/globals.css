@@ -17,9 +17,22 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --color-bol-red:    var(--bol-red);
-  --color-bol-yellow: var(--bol-yellow);
-  --color-bol-green:  var(--bol-green);
+}
+
+/* Tricolor con valores literales (no var()): así Tailwind genera un fallback con
+   transparencia para `bg-bol-yellow/10`, `border-bol-yellow/30`… en navegadores sin
+   color-mix() (Safari < 16.2, Chrome < 111, Samsung Internet antiguo). Con var() el
+   fallback salía el color sólido al 100 % y en esos móviles se veían bloques amarillos. */
+@theme {
+  --color-bol-red:    #D52B1E;
+  --color-bol-yellow: #F9E300;
+  --color-bol-green:  #007934;
+}
+
+/* La app es oscura: evita que el "modo oscuro automático" de algunos navegadores
+   Android (Chrome, Samsung Internet) recoloree la página. */
+:root {
+  color-scheme: dark;
 }
 
 *,

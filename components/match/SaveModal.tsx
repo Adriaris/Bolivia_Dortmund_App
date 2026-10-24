@@ -15,10 +15,13 @@ interface SaveModalProps {
   loading: boolean
 }
 
-const GOALKEEPER_NUMBER = 11
+// Portero por defecto: el jugador de la plantilla con posición POR (hoy Pablo, #29).
+// Antes se usaba el dorsal 11 heredado del Chevere, que aquí es Carlos.
+const isGoalkeeper = (p: Player) => p.position === 'POR'
 
 export default function SaveModal({ players, onSave, onClose, loading }: SaveModalProps) {
-  const defaultGoalkeeper = players.find((p) => p.number === GOALKEEPER_NUMBER) ?? null
+  const defaultGoalkeeper =
+    players.find((p) => isGoalkeeper(p) && !p.is_guest) ?? players.find(isGoalkeeper) ?? null
   const [goalkeeperPlayerId, setGoalkeeperPlayerId] = useState<string | null>(
     defaultGoalkeeper?.id ?? null
   )
@@ -55,7 +58,7 @@ export default function SaveModal({ players, onSave, onClose, loading }: SaveMod
             </span>
             {p.is_captain && <CaptainBadge inverted={goalkeeperPlayerId === p.id} />}
             {p.is_guest && <GuestBadge inverted={goalkeeperPlayerId === p.id} />}
-            {p.number === GOALKEEPER_NUMBER && (
+            {isGoalkeeper(p) && (
               <span className={`text-[10px] font-bold uppercase tracking-wide ${
                 goalkeeperPlayerId === p.id ? 'text-black/60' : 'text-cyan-500'
               }`}>

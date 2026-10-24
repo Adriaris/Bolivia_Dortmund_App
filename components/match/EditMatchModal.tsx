@@ -32,10 +32,11 @@ export default function EditMatchModal({ match, tournaments, onSave, onDelete, o
   const [opponentScore, setOpponentScore] = useState(match.opponent_score)
   const [status, setStatus] = useState<MatchStatus>(match.status)
   const [tournamentId, setTournamentId] = useState<string | null>(match.tournament_id)
-  const [resetClock, setResetClock] = useState(false)
 
   const matchHadStarted = match.status !== 'pending' && match.status !== 'postponed'
-  const showResetClock = status === 'pending' && matchHadStarted
+  // Volver a "Por empezar" (o aplazarlo) un partido ya iniciado = el crono vuelve a 0 y parado.
+  // Antes era opcional y, si no se marcaba, el crono seguía con el tiempo (o corriendo).
+  const willResetClock = (status === 'pending' || status === 'postponed') && matchHadStarted
 
   // Al marcar "Ganado (no presentado)", pre-rellenar 5-0 (resultado oficial por incomparecencia)
   const handleStatusChange = (value: MatchStatus) => {
@@ -56,7 +57,7 @@ export default function EditMatchModal({ match, tournaments, onSave, onDelete, o
       status,
       tournament_id: tournamentId,
     }
-    if (showResetClock && resetClock) {
+    if (willResetClock) {
       updates.first_half_elapsed_seconds = 0
       updates.second_half_elapsed_seconds = 0
       updates.is_clock_running = false
@@ -188,28 +189,10 @@ export default function EditMatchModal({ match, tournaments, onSave, onDelete, o
         </div>
 
         {/* Reiniciar cronómetro — solo si se vuelve a "Por empezar" desde un estado iniciado */}
-        {showResetClock && (
-          <button
-            type="button"
-            onClick={() => setResetClock((v) => !v)}
-            className={[
-              'flex items-center justify-between w-full px-4 py-3.5 rounded-xl border text-sm font-medium transition-colors',
-              resetClock
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                : 'bg-[#1f1f1f] border-[#2a2a2a] text-zinc-400 hover:bg-[#2a2a2a]',
-            ].join(' ')}
-          >
-            <span>Reiniciar cronómetro a 0</span>
-            <div className={[
-              'w-9 h-5 rounded-full transition-colors relative',
-              resetClock ? 'bg-amber-500' : 'bg-zinc-700',
-            ].join(' ')}>
-              <div className={[
-                'absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-sm',
-                resetClock ? 'translate-x-4' : 'translate-x-0.5',
-              ].join(' ')} />
-            </div>
-          </button>
+        {willResetClock && (
+          <p className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs text-amber-400">
+            El cronómetro se pondrá a 0 y quedará parado. Los goles y paradas ya registrados se mantienen.
+          </p>
         )}
 
         <Button onClick={handleSave} variant="primary" fullWidth size="lg" disabled={loading}>
