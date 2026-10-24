@@ -1,3 +1,4 @@
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
 import type { PlayerStats, StatMode } from '@/lib/types'
 
 interface StatsPodiumProps {
@@ -69,13 +70,17 @@ export default function StatsPodium({ stats, mode }: StatsPodiumProps) {
 
         const value = entry[key] as number
         const alias = entry.player.alias ?? entry.player.name.split(' ')[0]
-        const initial = alias[0].toUpperCase()
 
         return (
           <div key={pos} className={`flex-1 flex flex-col items-center ${order}`}>
             {/* Avatar */}
-            <div className={`w-11 h-11 rounded-full ${avatarBg} border-2 ${avatarBorder} flex items-center justify-center mb-1.5`}>
-              <span className={`text-base font-black ${avatarText}`}>{initial}</span>
+            <div className={`w-12 h-12 rounded-full border-2 ${avatarBorder} mb-1.5 overflow-hidden`}>
+              <PlayerAvatar
+                player={entry.player}
+                fallback="initial"
+                className="w-full h-full"
+                fallbackClassName={`${avatarBg} text-base font-black ${avatarText}`}
+              />
             </div>
 
             {/* Nombre */}

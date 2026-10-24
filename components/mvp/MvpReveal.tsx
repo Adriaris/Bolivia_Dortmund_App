@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Star } from 'lucide-react'
 import CelebrationConfetti from '@/components/CelebrationConfetti'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
 import { displayName, mvpTitle, type MatchMvpWithPlayer, type MvpPlayer } from '@/lib/supabase/mvp'
 import type { MvpResult, Player } from '@/lib/types'
 
@@ -73,8 +74,13 @@ export default function MvpReveal({ mvps, results, playersById, numberById, cele
             const num = numberFor(w.id)
             return (
               <div key={w.id} className="flex flex-col items-center gap-2">
-                <span className="w-16 h-16 rounded-full bg-bol-yellow text-black flex items-center justify-center text-2xl font-black tabular-nums shadow-[0_0_30px_rgba(249,227,0,0.25)]">
-                  {num ?? '–'}
+                <span className="rounded-full p-1 bg-bol-yellow shadow-[0_0_30px_rgba(249,227,0,0.25)]">
+                  <PlayerAvatar
+                    player={playerFor(w.id)}
+                    number={num}
+                    className="w-20 h-20"
+                    fallbackClassName="bg-bol-yellow text-black text-2xl font-black"
+                  />
                 </span>
                 <p className="text-lg font-black text-white leading-tight">{displayName(playerFor(w.id))}</p>
                 <p className="text-xs text-zinc-400 tabular-nums">

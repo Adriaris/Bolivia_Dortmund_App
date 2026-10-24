@@ -10,6 +10,8 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import Button from '@/components/ui/Button'
 import CaptainBadge from '@/components/ui/CaptainBadge'
 import GuestBadge from '@/components/ui/GuestBadge'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
+import PhotoEditModal from '@/components/players/PhotoEditModal'
 import PlayerIdentityBar from '@/components/players/PlayerIdentityBar'
 import PlayerAccessModal from '@/components/players/PlayerAccessModal'
 import ReleaseAccountModal from '@/components/players/ReleaseAccountModal'
@@ -44,6 +46,7 @@ function JugadoresContent() {
   const [showForm, setShowForm] = useState(false)
   const [showAccess, setShowAccess] = useState(false)
   const [releaseTarget, setReleaseTarget] = useState<Player | null>(null)
+  const [photoTarget, setPhotoTarget] = useState<Player | null>(null)
 
   const wantsAccess = searchParams.get('soy') === '1'
   const nextPath = safeNextPath(searchParams.get('next'))
@@ -127,6 +130,9 @@ function JugadoresContent() {
     }
   }
 
+  const setPhotoPath = (id: string, photoPath: string | null) =>
+    setPlayers((prev) => prev.map((x) => (x.id === id ? { ...x, photo_path: photoPath } : x)))
+
   const squad = players.filter((p) => !p.is_guest)
   const guests = players.filter((p) => p.is_guest)
 
@@ -137,12 +143,22 @@ function JugadoresContent() {
           key={p.id}
           className={`flex items-center gap-3 px-4 py-3.5 ${i < list.length - 1 ? 'border-b border-[#1f1f1f]' : ''}`}
         >
-          <span className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2a2a2a] text-white font-black text-sm shrink-0">
-            {p.number}
-          </span>
+          {isAdmin || p.id === playerId ? (
+            <button
+              type="button"
+              onClick={() => setPhotoTarget(p)}
+              aria-label={`Foto de ${p.name}`}
+              className="shrink-0 touch-manipulation"
+            >
+              <PlayerAvatar player={p} className="w-10 h-10" />
+            </button>
+          ) : (
+            <PlayerAvatar player={p} className="w-10 h-10" />
+          )}
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-medium truncate">{p.name}</p>
             <p className="text-zinc-600 text-xs flex items-center">
+              {p.photo_path && <span className="tabular-nums mr-1.5">#{p.number}</span>}
               {positionLabel[p.position as Position] ?? p.position}
               {p.is_captain && <CaptainBadge />}
               {p.is_guest && <GuestBadge />}
@@ -214,6 +230,7 @@ function JugadoresContent() {
         playerId={playerId}
         loading={authLoading}
         onIdentify={() => setShowAccess(true)}
+        onPhotoChanged={(path) => playerId && setPhotoPath(playerId, path)}
       />
 
       {/* Formulario nuevo jugador */}
@@ -351,6 +368,15 @@ function JugadoresContent() {
           nextPath={nextPath}
           onClose={() => setShowAccess(false)}
           onRegisteredChange={loadRegistered}
+        />
+      )}
+
+      {photoTarget && (
+        <PhotoEditModal
+          player={photoTarget}
+          asAdmin={photoTarget.id !== playerId}
+          onClose={() => setPhotoTarget(null)}
+          onChanged={(path) => setPhotoPath(photoTarget.id, path)}
         />
       )}
 

@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { LogOut, UserRound } from 'lucide-react'
+import { Camera, LogOut, UserRound } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { signOut } from '@/lib/auth'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
+import PhotoEditModal from './PhotoEditModal'
 import type { Player } from '@/lib/types'
 
 interface PlayerIdentityBarProps {
@@ -13,10 +15,13 @@ interface PlayerIdentityBarProps {
   playerId: string | null
   loading: boolean
   onIdentify: () => void
+  /** La foto del jugador ha cambiado (para refrescar la plantilla) */
+  onPhotoChanged?: (photoPath: string | null) => void
 }
 
-export default function PlayerIdentityBar({ player, playerId, loading, onIdentify }: PlayerIdentityBarProps) {
+export default function PlayerIdentityBar({ player, playerId, loading, onIdentify, onPhotoChanged }: PlayerIdentityBarProps) {
   const [confirmOut, setConfirmOut] = useState(false)
+  const [editPhoto, setEditPhoto] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,9 +63,23 @@ export default function PlayerIdentityBar({ player, playerId, loading, onIdentif
   return (
     <>
       <div className="mb-5 flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#141414] border border-bol-yellow/30">
-        <span className="w-9 h-9 flex items-center justify-center rounded-full bg-bol-yellow text-black font-black text-sm shrink-0">
-          {player?.number ?? <UserRound size={16} />}
-        </span>
+        {player ? (
+          <button
+            type="button"
+            onClick={() => setEditPhoto(true)}
+            aria-label={player.photo_path ? 'Cambiar tu foto de perfil' : 'Añadir tu foto de perfil'}
+            className="relative shrink-0 touch-manipulation"
+          >
+            <PlayerAvatar player={player} className="w-10 h-10" fallbackClassName="bg-bol-yellow text-black font-black text-sm" />
+            <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white text-black flex items-center justify-center border-2 border-[#141414]">
+              <Camera size={10} />
+            </span>
+          </button>
+        ) : (
+          <span className="w-9 h-9 flex items-center justify-center rounded-full bg-bol-yellow text-black font-black text-sm shrink-0">
+            <UserRound size={16} />
+          </span>
+        )}
         <p className="flex-1 min-w-0 text-sm text-white truncate">
           {player ? (
             <>Eres <strong className="font-bold">{player.name}</strong> · #{player.number}</>
@@ -76,6 +95,14 @@ export default function PlayerIdentityBar({ player, playerId, loading, onIdentif
           <LogOut size={14} /> Cerrar sesión
         </button>
       </div>
+
+      {editPhoto && player && (
+        <PhotoEditModal
+          player={player}
+          onClose={() => setEditPhoto(false)}
+          onChanged={(path) => onPhotoChanged?.(path)}
+        />
+      )}
 
       {confirmOut && (
         <Modal title="Cerrar sesión" onClose={() => setConfirmOut(false)}>

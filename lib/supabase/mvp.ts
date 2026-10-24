@@ -19,7 +19,7 @@ import type {
 // Reexportados por comodidad de los componentes que ya importan desde aquí
 export type { MvpPlayer, MatchMvpWithPlayer, MatchAttendanceWithPlayer } from '../types'
 
-const MVP_PLAYER_COLUMNS = 'id, number, name, alias'
+const MVP_PLAYER_COLUMNS = 'id, number, name, alias, photo_path'
 
 /** Título según cuántos empatan: empate a votos = doble (o triple) MVP. */
 export function mvpTitle(winners: number): string {

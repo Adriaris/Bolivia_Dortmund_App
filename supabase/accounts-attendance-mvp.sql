@@ -804,3 +804,62 @@ begin
   );
 end;
 $$;
+
+-- ============================================================
+-- v6 (2026-10-24): fotos de perfil
+-- ============================================================
+-- Bucket público 'avatars'. Ruta: <player_id>/<timestamp>.webp (o .jpg). Cada
+-- jugador sube/borra solo en su carpeta; los admins en cualquiera. La ruta
+-- vigente se guarda en players.photo_path vía set_player_photo() (players solo
+-- lo escribe un admin por RLS, así que el jugador usa esta función).
+alter table players add column if not exists photo_path text;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 1048576, array['image/webp', 'image/jpeg', 'image/png'])
+on conflict (id) do nothing;
+
+drop policy if exists "avatars_read" on storage.objects;
+create policy "avatars_read" on storage.objects for select to anon, authenticated
+  using (bucket_id = 'avatars');
+
+drop policy if exists "avatars_insert_own_or_admin" on storage.objects;
+create policy "avatars_insert_own_or_admin" on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'avatars'
+    and ((storage.foldername(name))[1] = public.current_player_id()::text or public.is_admin())
+  );
+
+drop policy if exists "avatars_update_own_or_admin" on storage.objects;
+create policy "avatars_update_own_or_admin" on storage.objects for update to authenticated
+  using (
+    bucket_id = 'avatars'
+    and ((storage.foldername(name))[1] = public.current_player_id()::text or public.is_admin())
+  )
+  with check (
+    bucket_id = 'avatars'
+    and ((storage.foldername(name))[1] = public.current_player_id()::text or public.is_admin())
+  );
+
+drop policy if exists "avatars_delete_own_or_admin" on storage.objects;
+create policy "avatars_delete_own_or_admin" on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'avatars'
+    and ((storage.foldername(name))[1] = public.current_player_id()::text or public.is_admin())
+  );
+
+-- Fija (o quita con null) la foto de un jugador: el propio jugador o un admin
+create or replace function public.set_player_photo(p_player_id uuid, p_path text)
+returns void language plpgsql security definer
+set search_path = '' as $$
+begin
+  if not (p_player_id = public.current_player_id() or public.is_admin()) then
+    raise exception 'not_allowed';
+  end if;
+  if p_path is not null and split_part(p_path, '/', 1) <> p_player_id::text then
+    raise exception 'invalid_path';
+  end if;
+  update public.players set photo_path = p_path where id = p_player_id;
+end;
+$$;
+revoke execute on function public.set_player_photo(uuid, text) from public, anon;
+grant execute on function public.set_player_photo(uuid, text) to authenticated;

@@ -29,6 +29,7 @@ const PLAYERS: Player[] = SQUAD.map(([number, name, alias]) => ({
   active: true,
   is_admin: false,
   is_guest: number === 66,
+  photo_path: null,
   created_at: '2026-10-01',
 }))
 const ME = 'p24'

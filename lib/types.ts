@@ -43,6 +43,8 @@ export interface Player {
   // Externo que viene a algún partido: juega, puntúa y vota como los demás,
   // pero solo un admin puede apuntarlo a un partido (no marca su asistencia)
   is_guest: boolean
+  // Foto de perfil: ruta en el bucket público 'avatars' (<player_id>/<timestamp>.webp) o null
+  photo_path: string | null
   created_at: string
 }
 
@@ -190,7 +192,7 @@ export interface MatchMvp {
   votes: number
 }
 
-export type MvpPlayer = Pick<Player, 'id' | 'number' | 'name' | 'alias'>
+export type MvpPlayer = Pick<Player, 'id' | 'number' | 'name' | 'alias' | 'photo_path'>
 
 export interface MatchMvpWithPlayer extends MatchMvp {
   player: MvpPlayer | null

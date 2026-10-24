@@ -6,6 +6,7 @@ import { CheckCircle2, Loader2, Lock, Star, UserRound } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import GuestBadge from '@/components/ui/GuestBadge'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
 import { displayName } from '@/lib/supabase/mvp'
 import type { MvpStatus, Player } from '@/lib/types'
 
@@ -176,9 +177,12 @@ export default function MvpVoting({
                         : 'bg-[#141414] border-[#2a2a2a] hover:border-bol-yellow/60 active:bg-[#1f1f1f]'
                     }`}
                   >
-                    <span className="w-9 h-9 shrink-0 rounded-full bg-[#1f1f1f] flex items-center justify-center text-sm font-black text-bol-yellow tabular-nums">
-                      {c.number}
-                    </span>
+                    <PlayerAvatar
+                      player={c.player}
+                      number={c.number}
+                      className="w-10 h-10"
+                      fallbackClassName="bg-[#1f1f1f] text-sm font-black text-bol-yellow"
+                    />
                     <span className="flex-1 min-w-0 text-sm font-semibold text-white truncate">
                       {displayName(c.player)}
                       {c.player.is_guest && <GuestBadge />}

@@ -93,6 +93,10 @@ jugados y rutas de los escudos de los rivales. Sirve para el seed inicial de la 
   pero NO marcan su asistencia (RLS): solo un admin los apunta, y por tanto solo votan donde jugaron.
 - Foto del split: un trigger mete en `tournament_players` a quien juega un partido del torneo
   (asistencia 'yes' o gol/asistencia nuestra), así el archivo incluye invitados y altas a mitad de split.
+- **Fotos de perfil** (`players.photo_path`, bucket público `avatars`, ruta `<player_id>/<ts>.webp`):
+  se recortan y comprimen en el móvil (`lib/photos.ts`, 512 px); cada jugador sube la suya desde su
+  barra en Plantilla y los admins la de cualquiera (RLS de storage + RPC `set_player_photo`).
+  `components/ui/PlayerAvatar.tsx` muestra foto o, sin foto, dorsal/inicial.
 - No activar "Leaked password protection" en Supabase Auth: rechazaría PINs numéricos.
 
 ## Reglas heredadas (idénticas al Chevere)
