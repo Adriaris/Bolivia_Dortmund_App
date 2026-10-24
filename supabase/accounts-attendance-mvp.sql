@@ -724,3 +724,83 @@ drop trigger if exists match_events_snapshot on match_events;
 create trigger match_events_snapshot
   after insert or update of scorer_player_id, assist_player_id on match_events
   for each row execute function public.trg_event_snapshot();
+
+-- ============================================================
+-- v5 (2026-10-24): todos ven QUIÉN FALTA por votar
+-- ============================================================
+-- pending_player_ids deja de ser solo para admins. Sigue sin revelarse a quién
+-- ha votado nadie: solo se sabe quién tiene papeleta pendiente.
+create or replace function public.get_mvp_status(p_match_id uuid)
+returns jsonb language plpgsql stable security definer
+set search_path = '' as $$
+declare
+  v_match     public.matches%rowtype;
+  v_me        uuid := public.current_player_id();
+  v_open      boolean;
+  v_closed    boolean;
+  v_eligible  integer;
+  v_voted     integer;
+  v_attended  boolean;
+  v_has_voted boolean;
+  v_my_vote   uuid;
+begin
+  select * into v_match from public.matches where id = p_match_id;
+  if not found then
+    raise exception 'match_not_found';
+  end if;
+  v_closed := v_match.mvp_closed_at is not null;
+  v_open   := v_match.status = 'finished' and not v_closed;
+
+  select count(*) into v_eligible
+  from public.match_attendance a
+  join public.player_accounts pa on pa.player_id = a.player_id
+  where a.match_id = p_match_id and a.status = 'yes';
+
+  select count(*) into v_voted
+  from public.mvp_ballots b
+  join public.match_attendance a on a.match_id = b.match_id and a.player_id = b.voter_player_id and a.status = 'yes'
+  join public.player_accounts pa on pa.player_id = b.voter_player_id
+  where b.match_id = p_match_id;
+
+  v_attended := v_me is not null and exists (
+    select 1 from public.match_attendance
+    where match_id = p_match_id and player_id = v_me and status = 'yes'
+  );
+  v_has_voted := v_me is not null and exists (
+    select 1 from public.mvp_ballots where match_id = p_match_id and voter_player_id = v_me
+  );
+  if v_has_voted then
+    select v.voted_player_id into v_my_vote from public.mvp_votes v
+    where v.match_id = p_match_id and v.voter_key = public.mvp_voter_key(p_match_id, v_me);
+  end if;
+
+  return jsonb_build_object(
+    'match_id',           p_match_id,
+    'voting_open',        v_open,
+    'closed',             v_closed,
+    'eligible',           v_eligible,
+    'voted',              v_voted,
+    'all_voted',          v_eligible > 0 and v_voted >= v_eligible,
+    'me_player_id',       v_me,
+    'me_attended',        v_attended,
+    'me_has_voted',       v_has_voted,
+    'me_voted_player_id', v_my_vote,
+    'can_vote',           v_open and v_attended,
+    'pending_player_ids', (
+        select coalesce(jsonb_agg(a.player_id), '[]'::jsonb)
+        from public.match_attendance a
+        join public.player_accounts pa on pa.player_id = a.player_id
+        where a.match_id = p_match_id and a.status = 'yes'
+          and not exists (
+            select 1 from public.mvp_ballots b
+            where b.match_id = p_match_id and b.voter_player_id = a.player_id
+          )
+      ),
+    'results', case when v_closed then (
+        select coalesce(jsonb_agg(jsonb_build_object('player_id', t.player_id, 'votes', t.votes)
+                                  order by t.votes desc), '[]'::jsonb)
+        from public.mvp_valid_tally(p_match_id) t
+      ) else null end
+  );
+end;
+$$;

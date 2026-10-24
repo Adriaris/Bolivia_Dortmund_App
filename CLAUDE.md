@@ -86,6 +86,7 @@ jugados y rutas de los escudos de los rivales. Sirve para el seed inicial de la 
   abierta (cada voto lleva `voter_key` = HMAC con secreto en Supabase Vault, nunca el votante).
   NO se cierra sola: solo un admin la cierra. Cuentan los votos de los asistentes con cuenta al cerrar;
   empate = MVP compartido en `match_mvps`; no se permite autovoto.
+  Todos (también anónimos) ven QUIÉN FALTA por votar (`pending_player_ids`); nunca a quién votó nadie.
 - Enlace único por partido: `/convocatoria/[id]` (lo comparte un admin por WhatsApp).
 - **Invitados** (`players.is_guest`): externos que juegan algún partido. Salen en Plantilla en su
   apartado, en los formularios de gol/parada y en estadísticas (etiqueta INV), se registran con PIN,

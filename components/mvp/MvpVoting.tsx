@@ -105,6 +105,34 @@ export default function MvpVoting({
         </p>
       </div>
 
+      {/* Quién falta por votar: visible para todos (nunca a quién ha votado nadie) */}
+      {status.eligible > 0 && (
+        <section className="rounded-2xl bg-[#141414] border border-[#2a2a2a] px-4 py-4">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">
+            Faltan por votar <span className="text-zinc-600 tabular-nums">{pendingNames.length}</span>
+          </h3>
+          {pendingNames.length === 0 ? (
+            <p className="text-xs text-zinc-500">Han votado todos.</p>
+          ) : (
+            <ul className="flex flex-wrap gap-1.5">
+              {pendingNames.map((p) => (
+                <li
+                  key={p.id}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
+                    p.id === meId
+                      ? 'bg-bol-yellow/10 border-bol-yellow/40 text-bol-yellow'
+                      : 'bg-[#1f1f1f] border-[#2a2a2a] text-zinc-300'
+                  }`}
+                >
+                  {displayName(p)}
+                  {p.id === meId && ' (tú)'}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       {/* Mi situación */}
       {authLoading ? (
         <div className="flex justify-center py-6">
@@ -201,21 +229,17 @@ export default function MvpVoting({
         <p className="text-sm text-red-400 text-center">{error}</p>
       )}
 
-      {/* Admin: quién falta y cierre manual */}
+      {/* Admin: cierre manual */}
       {isAdmin && !authLoading && (
         <section className="rounded-2xl border border-amber-900/40 bg-amber-950/10 px-4 py-4 flex flex-col gap-3">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-amber-500">Admin · faltan por votar</h3>
-          {pendingNames.length === 0 ? (
-            <p className="text-xs text-zinc-500">
-              {status.eligible === 0
-                ? 'Nadie puede votar todavía: marca quién jugó y que tengan cuenta.'
-                : 'Han votado todos. Cuando quieras, cierra la votación para desvelar el MVP.'}
-            </p>
-          ) : (
-            <p className="text-sm text-zinc-300 leading-relaxed">
-              {pendingNames.map((p) => displayName(p)).join(', ')}
-            </p>
-          )}
+          <h3 className="text-xs font-bold uppercase tracking-widest text-amber-500">Admin</h3>
+          <p className="text-xs text-zinc-500">
+            {status.eligible === 0
+              ? 'Nadie puede votar todavía: marca quién jugó y que tengan cuenta.'
+              : status.all_voted
+                ? 'Han votado todos. Cuando quieras, cierra la votación para desvelar el MVP.'
+                : 'Cierra la votación cuando quieras desvelar el MVP con los votos que haya.'}
+          </p>
           <Button variant="secondary" size="lg" fullWidth onClick={() => { setError(null); setConfirmClose(true) }}>
             <Lock size={16} />
             Cerrar votación
