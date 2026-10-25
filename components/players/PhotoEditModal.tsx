@@ -5,7 +5,8 @@ import { Camera, Loader2, Trash2 } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import PlayerAvatar from '@/components/ui/PlayerAvatar'
-import { photoErrorMessage, removePlayerPhoto, uploadPlayerPhoto } from '@/lib/photos'
+import { photoErrorMessage, removePlayerPhoto, uploadPlayerPhotoBlob } from '@/lib/photos'
+import PhotoCropper from './PhotoCropper'
 import type { Player } from '@/lib/types'
 
 interface PhotoEditModalProps {
@@ -22,19 +23,32 @@ export default function PhotoEditModal({ player, asAdmin = false, onClose, onCha
   const [busy, setBusy] = useState<'upload' | 'remove' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [current, setCurrent] = useState<Player>(player)
+  // Foto elegida pendiente de encuadrar
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = '' // permite volver a elegir el mismo archivo
     if (!file) return
+    setError(null)
+    if (!file.type.startsWith('image/')) {
+      setError('El archivo no es una imagen.')
+      return
+    }
+    setPendingFile(file)
+  }
+
+  async function handleCropped(blob: Blob) {
     setBusy('upload')
     setError(null)
     try {
-      const path = await uploadPlayerPhoto(current, file)
+      const path = await uploadPlayerPhotoBlob(current, blob)
       setCurrent({ ...current, photo_path: path })
       onChanged(path)
+      setPendingFile(null)
     } catch (err) {
       setError(photoErrorMessage(err))
+      setPendingFile(null)
     } finally {
       setBusy(null)
     }
@@ -52,6 +66,19 @@ export default function PhotoEditModal({ player, asAdmin = false, onClose, onCha
     } finally {
       setBusy(null)
     }
+  }
+
+  if (pendingFile) {
+    return (
+      <Modal title="Encuadra la foto" onClose={() => !busy && setPendingFile(null)}>
+        <PhotoCropper
+          file={pendingFile}
+          busy={busy === 'upload'}
+          onCancel={() => setPendingFile(null)}
+          onConfirm={handleCropped}
+        />
+      </Modal>
+    )
   }
 
   return (

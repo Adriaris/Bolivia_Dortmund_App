@@ -36,6 +36,29 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | n
   return new Promise((resolve) => canvas.toBlob(resolve, type, QUALITY))
 }
 
+/** Zona cuadrada de la imagen original (en píxeles de la imagen) que se quiere conservar. */
+export interface CropArea {
+  x: number
+  y: number
+  size: number
+}
+
+/** Recorta la zona elegida, la lleva a ≤512 px y la comprime (WebP; JPEG si no hay WebP). */
+export async function cropToBlob(image: CanvasImageSource, area: CropArea): Promise<Blob> {
+  const out = Math.max(1, Math.min(SIZE, Math.round(area.size)))
+  const canvas = document.createElement('canvas')
+  canvas.width = out
+  canvas.height = out
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('canvas_unavailable')
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(image, area.x, area.y, area.size, area.size, 0, 0, out, out)
+  let blob = await canvasToBlob(canvas, 'image/webp')
+  if (!blob || blob.type !== 'image/webp') blob = await canvasToBlob(canvas, 'image/jpeg')
+  if (!blob) throw new Error('compress_failed')
+  return blob
+}
+
 /** Recorta al centro en cuadrado, reduce a 512 px y comprime (WebP; JPEG si el navegador no sabe WebP). */
 export async function compressToSquare(file: File): Promise<Blob> {
   const image = await loadImage(file)
@@ -57,13 +80,20 @@ export async function compressToSquare(file: File): Promise<Blob> {
   return blob
 }
 
-/** Sube la foto de un jugador (el propio jugador o un admin) y borra la anterior. Devuelve la nueva ruta. */
+/** Sube la foto de un jugador a partir de un archivo sin encuadrar (recorte centrado automático). */
 export async function uploadPlayerPhoto(
   player: Pick<Player, 'id' | 'photo_path'>,
   file: File
 ): Promise<string> {
   if (!file.type.startsWith('image/')) throw new Error('not_an_image')
-  const blob = await compressToSquare(file)
+  return uploadPlayerPhotoBlob(player, await compressToSquare(file))
+}
+
+/** Sube una foto ya recortada y comprimida (el propio jugador o un admin) y borra la anterior. Devuelve la nueva ruta. */
+export async function uploadPlayerPhotoBlob(
+  player: Pick<Player, 'id' | 'photo_path'>,
+  blob: Blob
+): Promise<string> {
   const ext = blob.type === 'image/webp' ? 'webp' : 'jpg'
   const path = `${player.id}/${Date.now()}.${ext}`
 
