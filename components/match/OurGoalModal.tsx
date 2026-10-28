@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button'
 import CaptainBadge from '@/components/ui/CaptainBadge'
 import GuestBadge from '@/components/ui/GuestBadge'
 import type { GoalType, Player } from '@/lib/types'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
 
 interface OurGoalModalProps {
   players: Player[]
@@ -36,9 +37,7 @@ function PlayerButton({
       onClick={onClick}
       className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-[#1f1f1f] hover:bg-[#2a2a2a] active:bg-[#333] transition-colors text-left"
     >
-      <span className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2a2a2a] text-white font-bold text-xs shrink-0">
-        {player.number}
-      </span>
+      <PlayerAvatar player={player} className="w-9 h-9" fallbackClassName="bg-[#2a2a2a] text-white font-bold text-xs" />
       <span className="font-medium text-white flex-1 text-sm">{player.name}</span>
       <span className="text-xs text-zinc-600">{player.position}</span>
       {player.is_captain && <CaptainBadge />}

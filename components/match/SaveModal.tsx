@@ -6,6 +6,7 @@ import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import CaptainBadge from '@/components/ui/CaptainBadge'
 import GuestBadge from '@/components/ui/GuestBadge'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
 import type { Player } from '@/lib/types'
 
 interface SaveModalProps {
@@ -45,13 +46,11 @@ export default function SaveModal({ players, onSave, onClose, loading }: SaveMod
                 : 'bg-[#1f1f1f] text-zinc-300 hover:bg-[#2a2a2a]',
             ].join(' ')}
           >
-            <span
-              className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold shrink-0 ${
-                goalkeeperPlayerId === p.id ? 'bg-black/20' : 'bg-[#2a2a2a] text-zinc-400'
-              }`}
-            >
-              {p.number}
-            </span>
+            <PlayerAvatar
+              player={p}
+              className="w-9 h-9"
+              fallbackClassName={`text-xs font-bold ${goalkeeperPlayerId === p.id ? 'bg-black/20' : 'bg-[#2a2a2a] text-zinc-400'}`}
+            />
             <span className="font-medium flex-1 truncate">{p.name}</span>
             <span className={`text-xs ${goalkeeperPlayerId === p.id ? 'text-black/50' : 'text-zinc-600'}`}>
               {p.position}

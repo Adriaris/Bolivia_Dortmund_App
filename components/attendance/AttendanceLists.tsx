@@ -4,6 +4,8 @@ import { Check, Loader2, RotateCcw, ShieldCheck, X } from 'lucide-react'
 import { displayName, type MatchAttendanceWithPlayer } from '@/lib/supabase/mvp'
 import type { AttendanceStatus, Player } from '@/lib/types'
 import GuestBadge from '@/components/ui/GuestBadge'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
+import PlayerLink from '@/components/players/PlayerLink'
 import type { RosterEntry } from './types'
 
 interface AttendanceListsProps {
@@ -79,17 +81,19 @@ export default function AttendanceLists({
         key={row.player.id}
         className="flex items-center gap-3 px-3 py-2.5 border-b border-[#1f1f1f] last:border-0"
       >
-        <span
-          className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-black tabular-nums ${
+        <PlayerLink player={row.player} className="flex items-center gap-3 flex-1 min-w-0">
+        <PlayerAvatar
+          player={row.player}
+          number={row.number}
+          className={`w-9 h-9 ${tone === 'yes' ? 'ring-2 ring-emerald-500/40' : tone === 'no' ? 'ring-2 ring-red-500/30 opacity-70' : ''}`}
+          fallbackClassName={`text-xs font-black ${
             tone === 'yes'
               ? 'bg-emerald-500/10 text-emerald-400'
               : tone === 'no'
                 ? 'bg-red-500/10 text-red-400'
                 : 'bg-[#1f1f1f] text-zinc-500'
           }`}
-        >
-          {row.number}
-        </span>
+        />
         <div className="flex-1 min-w-0">
           <p className={`text-sm truncate ${tone === 'none' ? 'text-zinc-400' : 'text-white font-medium'}`}>
             {displayName(row.player)}
@@ -108,6 +112,7 @@ export default function AttendanceLists({
             </p>
           ) : null}
         </div>
+        </PlayerLink>
 
         {editable && onAdminSet && (
           <div className="flex items-center gap-1 shrink-0" aria-label={`Asistencia de ${displayName(row.player)}`}>

@@ -1,5 +1,6 @@
 import PlayerAvatar from '@/components/ui/PlayerAvatar'
 import type { PlayerStats, StatMode } from '@/lib/types'
+import PlayerLink from '@/components/players/PlayerLink'
 
 interface StatsPodiumProps {
   stats: PlayerStats[]
@@ -73,6 +74,7 @@ export default function StatsPodium({ stats, mode }: StatsPodiumProps) {
 
         return (
           <div key={pos} className={`flex-1 flex flex-col items-center ${order}`}>
+            <PlayerLink player={entry.player} className="flex flex-col items-center w-full">
             {/* Avatar */}
             <div className={`w-12 h-12 rounded-full border-2 ${avatarBorder} mb-1.5 overflow-hidden`}>
               <PlayerAvatar
@@ -87,6 +89,7 @@ export default function StatsPodium({ stats, mode }: StatsPodiumProps) {
             <p className="text-sm font-bold text-white text-center leading-tight truncate w-full px-1 mb-2">
               {alias}
             </p>
+            </PlayerLink>
 
             {/* Plataforma con valor dentro */}
             <div className={`w-full ${barH} bg-linear-to-b ${barGradient} rounded-t-xl ${glow} flex items-center justify-center`}>

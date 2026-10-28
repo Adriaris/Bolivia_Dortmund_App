@@ -9,6 +9,7 @@ import GuestBadge from '@/components/ui/GuestBadge'
 import PlayerAvatar from '@/components/ui/PlayerAvatar'
 import { displayName } from '@/lib/supabase/mvp'
 import type { MvpStatus, Player } from '@/lib/types'
+import PlayerLink from '@/components/players/PlayerLink'
 
 export interface MvpCandidate {
   player: Player
@@ -117,16 +118,19 @@ export default function MvpVoting({
           ) : (
             <ul className="flex flex-wrap gap-1.5">
               {pendingNames.map((p) => (
-                <li
-                  key={p.id}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
-                    p.id === meId
-                      ? 'bg-bol-yellow/10 border-bol-yellow/40 text-bol-yellow'
-                      : 'bg-[#1f1f1f] border-[#2a2a2a] text-zinc-300'
-                  }`}
-                >
-                  {displayName(p)}
-                  {p.id === meId && ' (tú)'}
+                <li key={p.id}>
+                  <PlayerLink
+                    player={p}
+                    className={`flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-xs font-medium border ${
+                      p.id === meId
+                        ? 'bg-bol-yellow/10 border-bol-yellow/40 text-bol-yellow'
+                        : 'bg-[#1f1f1f] border-[#2a2a2a] text-zinc-300'
+                    }`}
+                  >
+                    <PlayerAvatar player={p} className="w-5 h-5" fallbackClassName="bg-[#2a2a2a] text-zinc-400 text-[9px] font-black" />
+                    {displayName(p)}
+                    {p.id === meId && ' (tú)'}
+                  </PlayerLink>
                 </li>
               ))}
             </ul>

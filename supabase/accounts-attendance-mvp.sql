@@ -863,3 +863,55 @@ end;
 $$;
 revoke execute on function public.set_player_photo(uuid, text) from public, anon;
 grant execute on function public.set_player_photo(uuid, text) to authenticated;
+
+-- ============================================================
+-- v7 (2026-10-28): ficha de jugador
+-- ============================================================
+-- Estadísticas de un jugador en el split en curso para el modal de ficha.
+-- Goles/asistencias/paradas: todos los partidos del torneo (igual que la página
+-- de Estadísticas). Partidos jugados: terminados donde consta como asistente o
+-- tiene gol/asistencia/parada o fue MVP. Todo lo que lee ya es público (SECURITY INVOKER).
+create or replace function public.get_player_profile(p_player_id uuid)
+returns jsonb language sql stable
+set search_path = '' as $$
+  with t as (
+    select id, short_name, season from public.tournaments where is_current limit 1
+  ),
+  m as (
+    select id, status, opponent_name, match_date from public.matches
+    where tournament_id = (select id from t)
+  ),
+  ev as (
+    select e.* from public.match_events e
+    where e.match_id in (select id from m) and e.team_side = 'ours'
+  )
+  select jsonb_build_object(
+    'tournament', (select short_name || ' · ' || season from t),
+    'goals',   (select count(*) from ev where event_type = 'goal' and scorer_player_id = p_player_id),
+    'assists', (select count(*) from ev where event_type = 'goal' and assist_player_id = p_player_id),
+    'saves',   (select count(*) from ev where event_type = 'save' and scorer_player_id = p_player_id),
+    'mvps',    (select count(*) from public.match_mvps mm where mm.player_id = p_player_id and mm.match_id in (select id from m)),
+    'matches', (
+      select count(*) from (
+        select a.match_id from public.match_attendance a
+        where a.player_id = p_player_id and a.status = 'yes'
+          and a.match_id in (select id from m where status in ('finished', 'walkover'))
+        union
+        select ev.match_id from ev
+        where (ev.scorer_player_id = p_player_id or ev.assist_player_id = p_player_id)
+          and ev.match_id in (select id from m where status in ('finished', 'walkover'))
+        union
+        select mm.match_id from public.match_mvps mm
+        where mm.player_id = p_player_id and mm.match_id in (select id from m)
+      ) played
+    ),
+    'mvp_matches', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+               'match_id', m.id, 'opponent', m.opponent_name, 'date', m.match_date
+             ) order by m.match_date desc), '[]'::jsonb)
+      from public.match_mvps mm join m on m.id = mm.match_id
+      where mm.player_id = p_player_id
+    )
+  )
+$$;
+grant execute on function public.get_player_profile(uuid) to anon, authenticated;

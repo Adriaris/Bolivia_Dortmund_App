@@ -6,6 +6,7 @@ import CelebrationConfetti from '@/components/CelebrationConfetti'
 import PlayerAvatar from '@/components/ui/PlayerAvatar'
 import { displayName, mvpTitle, type MatchMvpWithPlayer, type MvpPlayer } from '@/lib/supabase/mvp'
 import type { MvpResult, Player } from '@/lib/types'
+import PlayerLink from '@/components/players/PlayerLink'
 
 interface MvpRevealProps {
   mvps: MatchMvpWithPlayer[]
@@ -73,7 +74,7 @@ export default function MvpReveal({ mvps, results, playersById, numberById, cele
           {winners.map((w) => {
             const num = numberFor(w.id)
             return (
-              <div key={w.id} className="flex flex-col items-center gap-2">
+              <PlayerLink key={w.id} player={playerFor(w.id) ? { ...playerFor(w.id)!, id: w.id } : { id: w.id }} className="flex flex-col items-center gap-2">
                 <span className="rounded-full p-1 bg-bol-yellow shadow-[0_0_30px_rgba(249,227,0,0.25)]">
                   <PlayerAvatar
                     player={playerFor(w.id)}
@@ -87,7 +88,7 @@ export default function MvpReveal({ mvps, results, playersById, numberById, cele
                   {/* votes = 0 → MVP cargado a mano (votación hecha fuera de la app) */}
                   {w.votes > 0 ? `${w.votes} ${w.votes === 1 ? 'voto' : 'votos'}` : 'Votación por WhatsApp'}
                 </p>
-              </div>
+              </PlayerLink>
             )
           })}
         </div>
@@ -102,10 +103,10 @@ export default function MvpReveal({ mvps, results, playersById, numberById, cele
               const width = maxVotes > 0 ? (r.votes / maxVotes) * 100 : 0
               return (
                 <li key={r.player_id} className="flex items-center gap-3">
-                  <span className="w-28 shrink-0 text-xs truncate text-zinc-300">
-                    <span className="text-zinc-600 tabular-nums mr-1.5">{numberFor(r.player_id) ?? ''}</span>
-                    {displayName(playerFor(r.player_id))}
-                  </span>
+                  <PlayerLink player={{ ...(playerFor(r.player_id) ?? {}), id: r.player_id }} className="w-32 shrink-0 flex items-center gap-2 min-w-0">
+                    <PlayerAvatar player={playerFor(r.player_id)} number={numberFor(r.player_id)} className="w-6 h-6" fallbackClassName="bg-[#1f1f1f] text-zinc-500 text-[10px] font-black" />
+                    <span className="text-xs truncate text-zinc-300">{displayName(playerFor(r.player_id))}</span>
+                  </PlayerLink>
                   <div className="flex-1 h-3 rounded-full bg-[#1f1f1f] overflow-hidden">
                     <div
                       className={`h-full rounded-full motion-safe:transition-[width] motion-safe:duration-700 motion-safe:ease-out ${

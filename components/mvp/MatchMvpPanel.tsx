@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Star } from 'lucide-react'
 import ConvocatoriaActions from '@/components/attendance/ConvocatoriaActions'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
 import ShareConvocatoriaButton from '@/components/attendance/ShareConvocatoriaButton'
 import { displayName, mvpTitle, getMatchMvps, type MatchMvpWithPlayer } from '@/lib/supabase/mvp'
 import type { Match } from '@/lib/types'
@@ -65,8 +66,16 @@ export default function MatchMvpPanel({ match, initialMvps, isAdmin }: MatchMvpP
         href={href}
         className="flex items-center gap-3 px-4 py-4 rounded-2xl bg-[#141414] border border-[#2a2a2a] hover:border-zinc-600 active:bg-[#1f1f1f] transition-colors"
       >
-        <span className="w-10 h-10 rounded-full bg-bol-yellow/10 flex items-center justify-center shrink-0">
-          <Star size={18} className="text-bol-yellow fill-bol-yellow" />
+        <span className="flex -space-x-3 shrink-0">
+          {mvps.slice(0, 3).map((m) =>
+            m.player?.photo_path ? (
+              <PlayerAvatar key={m.player_id} player={m.player} className="w-11 h-11 ring-2 ring-bol-yellow" />
+            ) : (
+              <span key={m.player_id} className="w-11 h-11 rounded-full bg-bol-yellow/10 ring-2 ring-[#141414] flex items-center justify-center">
+                <Star size={18} className="text-bol-yellow fill-bol-yellow" />
+              </span>
+            )
+          )}
         </span>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-widest text-bol-yellow">

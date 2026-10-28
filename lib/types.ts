@@ -232,3 +232,14 @@ export type MvpErrorCode =
   | 'already_voted'
   | 'invalid_candidate'
   | 'not_admin'
+
+// Ficha de jugador (RPC get_player_profile): números del split en curso
+export interface PlayerProfileStats {
+  tournament: string | null
+  matches: number
+  goals: number
+  assists: number
+  saves: number
+  mvps: number
+  mvp_matches: { match_id: string; opponent: string; date: string | null }[]
+}

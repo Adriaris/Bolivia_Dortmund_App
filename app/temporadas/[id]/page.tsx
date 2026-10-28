@@ -13,6 +13,8 @@ import { OUR_STANDINGS_TEAM } from '@/lib/teams'
 import MatchCard from '@/components/matches/MatchCard'
 import { getMvpsForMatches } from '@/lib/supabase/mvp'
 import CaptainBadge from '@/components/ui/CaptainBadge'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
+import PlayerLink from '@/components/players/PlayerLink'
 import GuestBadge from '@/components/ui/GuestBadge'
 import StandingsTable from '@/app/clasificacion/StandingsTable'
 import ArchiveStatsTabs from './ArchiveStatsTabs'
@@ -168,17 +170,17 @@ export default async function TemporadaPage({
                     i < roster.length - 1 ? 'border-b border-[#1f1f1f]' : ''
                   }`}
                 >
-                  <span className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2a2a2a] text-white font-black text-sm shrink-0">
-                    {tp.number}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{tp.player.name}</p>
-                    <p className="text-zinc-600 text-xs flex items-center">
-                      {positionLabel[tp.position as Position] ?? tp.position}
-                      {tp.is_captain && <CaptainBadge />}
-                      {tp.player.is_guest && <GuestBadge />}
-                    </p>
-                  </div>
+                  <PlayerLink player={tp.player} className="flex items-center gap-4 flex-1 min-w-0">
+                    <PlayerAvatar player={tp.player} number={tp.number} className="w-9 h-9" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{tp.player.name}</p>
+                      <p className="text-zinc-600 text-xs flex items-center">
+                        {positionLabel[tp.position as Position] ?? tp.position}
+                        {tp.is_captain && <CaptainBadge />}
+                        {tp.player.is_guest && <GuestBadge />}
+                      </p>
+                    </div>
+                  </PlayerLink>
                   <span className="text-xs font-bold text-zinc-700 uppercase">{tp.position}</span>
                 </div>
               ))}

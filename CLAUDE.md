@@ -97,6 +97,11 @@ jugados y rutas de los escudos de los rivales. Sirve para el seed inicial de la 
   se recortan y comprimen en el móvil (`lib/photos.ts`, 512 px); cada jugador sube la suya desde su
   barra en Plantilla y los admins la de cualquiera (RLS de storage + RPC `set_player_photo`).
   `components/ui/PlayerAvatar.tsx` muestra foto o, sin foto, dorsal/inicial.
+- **Ficha de jugador**: tocar a un jugador (Plantilla, goles, asistencias, estadísticas, podio,
+  convocatoria, revelación del MVP, archivo) abre `PlayerProfileModal` vía `usePlayerProfile().openPlayer()`
+  (provider en `app/layout.tsx`; envolver con `components/players/PlayerLink.tsx`, nunca dentro de
+  botones/enlaces). Números del split por RPC `get_player_profile`. La foto se cambia desde la ficha
+  (propio jugador o admin) y se anuncia con el evento `PHOTO_CHANGED_EVENT`.
 - No activar "Leaked password protection" en Supabase Auth: rechazaría PINs numéricos.
 
 ## Reglas heredadas (idénticas al Chevere)

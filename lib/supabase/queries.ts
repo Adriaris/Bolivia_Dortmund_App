@@ -8,6 +8,7 @@ import type {
   NewMatchEvent,
   Period,
   Player,
+  PlayerProfileStats,
   Standing,
   Tournament,
   TournamentPlayerWithPlayer,
@@ -25,6 +26,18 @@ export async function getPlayers(): Promise<Player[]> {
     .order('number')
   if (error) throw error
   return data
+}
+
+export async function getPlayer(id: string): Promise<Player | null> {
+  const { data, error } = await supabase.from('players').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return (data as Player | null) ?? null
+}
+
+export async function getPlayerProfile(id: string): Promise<PlayerProfileStats> {
+  const { data, error } = await supabase.rpc('get_player_profile', { p_player_id: id })
+  if (error) throw error
+  return data as PlayerProfileStats
 }
 
 export async function createPlayer(
@@ -242,8 +255,8 @@ export async function getMatchEvents(matchId: string): Promise<MatchEventWithPla
     .from('match_events')
     .select(`
       *,
-      scorer:scorer_player_id(id, number, name, alias, position, is_captain),
-      assist:assist_player_id(id, number, name, alias, position, is_captain)
+      scorer:scorer_player_id(id, number, name, alias, position, is_captain, is_guest, photo_path),
+      assist:assist_player_id(id, number, name, alias, position, is_captain, is_guest, photo_path)
     `)
     .eq('match_id', matchId)
     .order('minute', { ascending: true })

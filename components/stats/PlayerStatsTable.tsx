@@ -1,6 +1,8 @@
 import CaptainBadge from '@/components/ui/CaptainBadge'
 import GuestBadge from '@/components/ui/GuestBadge'
 import type { PlayerStats, StatMode } from '@/lib/types'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
+import PlayerLink from '@/components/players/PlayerLink'
 
 interface PlayerStatsTableProps {
   stats: PlayerStats[]
@@ -38,13 +40,18 @@ export default function PlayerStatsTable({ stats, mode }: PlayerStatsTableProps)
         {filtered.map((s, i) => (
           <tr key={s.player.id} className="border-b border-[#1f1f1f] last:border-0">
             <td className="py-3.5 text-zinc-700 text-xs">{i + 1}</td>
-            <td className="py-3.5">
-              <span className="font-medium text-white">{s.player.alias ?? s.player.name}</span>
-              <span className="ml-2 text-xs text-zinc-600 inline-flex items-center gap-1">
-                {s.player.number} · {s.player.position}
-                {s.player.is_captain && <CaptainBadge />}
-                {s.player.is_guest && <GuestBadge />}
-              </span>
+            <td className="py-3">
+              <PlayerLink player={s.player} className="flex items-center gap-2.5 min-w-0">
+                <PlayerAvatar player={s.player} className="w-8 h-8" fallbackClassName="bg-[#2a2a2a] text-zinc-300 text-[11px] font-black" />
+                <span className="min-w-0">
+                  <span className="font-medium text-white">{s.player.alias ?? s.player.name}</span>
+                  <span className="ml-2 text-xs text-zinc-600 inline-flex items-center gap-1">
+                    {s.player.number} · {s.player.position}
+                    {s.player.is_captain && <CaptainBadge />}
+                    {s.player.is_guest && <GuestBadge />}
+                  </span>
+                </span>
+              </PlayerLink>
             </td>
             <td className="py-3.5 text-right font-black text-white text-lg">
               {s[accessor] as number}

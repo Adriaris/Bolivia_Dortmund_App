@@ -17,6 +17,16 @@ interface PhotoEditModalProps {
   onChanged: (photoPath: string | null) => void
 }
 
+/** Evento global: otras pantallas (Plantilla…) refrescan la foto sin recargar. */
+export const PHOTO_CHANGED_EVENT = 'bvd:player-photo-changed'
+export interface PhotoChangedDetail {
+  playerId: string
+  photoPath: string | null
+}
+function announce(playerId: string, photoPath: string | null) {
+  window.dispatchEvent(new CustomEvent<PhotoChangedDetail>(PHOTO_CHANGED_EVENT, { detail: { playerId, photoPath } }))
+}
+
 /** Subir, cambiar o quitar la foto de perfil (el propio jugador o un admin). */
 export default function PhotoEditModal({ player, asAdmin = false, onClose, onChanged }: PhotoEditModalProps) {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -45,6 +55,7 @@ export default function PhotoEditModal({ player, asAdmin = false, onClose, onCha
       const path = await uploadPlayerPhotoBlob(current, blob)
       setCurrent({ ...current, photo_path: path })
       onChanged(path)
+      announce(current.id, path)
       setPendingFile(null)
     } catch (err) {
       setError(photoErrorMessage(err))
@@ -61,6 +72,7 @@ export default function PhotoEditModal({ player, asAdmin = false, onClose, onCha
       await removePlayerPhoto(current)
       setCurrent({ ...current, photo_path: null })
       onChanged(null)
+      announce(current.id, null)
     } catch (err) {
       setError(photoErrorMessage(err))
     } finally {

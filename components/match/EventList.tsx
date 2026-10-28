@@ -2,6 +2,8 @@ import { Pencil } from 'lucide-react'
 import { GiSoccerBall, GiGoalKeeper } from 'react-icons/gi'
 import { LuCornerUpRight } from 'react-icons/lu'
 import type { MatchEventWithPlayers, Player } from '@/lib/types'
+import PlayerAvatar from '@/components/ui/PlayerAvatar'
+import PlayerLink from '@/components/players/PlayerLink'
 
 const displayName = (p: Player) => p.alias ?? p.name
 
@@ -92,35 +94,35 @@ export default function EventList({ events, onEditEvent }: EventListProps) {
             <div className="flex-1 min-w-0">
               {isSave ? (
                 <div className="flex items-center gap-2">
-                  {event.scorer && (
-                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-md text-xs font-black bg-cyan-900/60 text-cyan-300 shrink-0">
-                      {event.scorer.number}
+                  <PlayerLink player={event.scorer} className="flex items-center gap-2 min-w-0">
+                    {event.scorer && (
+                      <PlayerAvatar player={event.scorer} className="w-7 h-7" fallbackClassName="bg-cyan-900/60 text-cyan-300 text-xs font-black" />
+                    )}
+                    <span className="font-bold text-cyan-200 text-sm truncate">
+                      {event.scorer ? displayName(event.scorer) : 'Portero'}
                     </span>
-                  )}
-                  <span className="font-bold text-cyan-200 text-sm truncate">
-                    {event.scorer ? displayName(event.scorer) : 'Portero'}
-                  </span>
+                  </PlayerLink>
                 </div>
               ) : isOurs ? (
                 <>
                   <div className="flex items-center gap-2">
-                    {event.scorer && (
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-md text-xs font-black bg-white text-black shrink-0">
-                        {event.scorer.number}
+                    <PlayerLink player={event.scorer} className="flex items-center gap-2 min-w-0">
+                      {event.scorer && (
+                        <PlayerAvatar player={event.scorer} className="w-7 h-7" fallbackClassName="bg-white text-black text-xs font-black" />
+                      )}
+                      <span className="font-bold text-white text-sm truncate">
+                        {event.scorer ? displayName(event.scorer) : 'Desconocido'}
                       </span>
-                    )}
-                    <span className="font-bold text-white text-sm truncate">
-                      {event.scorer ? displayName(event.scorer) : 'Desconocido'}
-                    </span>
+                    </PlayerLink>
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
                     {event.assist ? (
                       <>
                         <LuCornerUpRight className="w-3 h-3 text-zinc-500 shrink-0" />
-                        <span className="inline-flex items-center justify-center w-4 h-4 rounded text-[10px] font-black bg-white/10 text-zinc-300 shrink-0">
-                          {event.assist.number}
-                        </span>
-                        <span className="text-xs text-zinc-500 truncate">{displayName(event.assist)}</span>
+                        <PlayerLink player={event.assist} className="flex items-center gap-1.5 min-w-0">
+                          <PlayerAvatar player={event.assist} className="w-5 h-5" fallbackClassName="bg-white/10 text-zinc-300 text-[10px] font-black" />
+                          <span className="text-xs text-zinc-500 truncate">{displayName(event.assist)}</span>
+                        </PlayerLink>
                       </>
                     ) : (
                       <span className="text-xs text-transparent select-none leading-none">·</span>

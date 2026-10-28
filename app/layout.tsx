@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
 import './globals.css'
+import { PlayerProfileProvider } from '@/components/players/PlayerProfileProvider'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import SplashScreen from '@/components/SplashScreen'
 import BottomNav from '@/components/BottomNav'
@@ -41,10 +42,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="notch-cover" />
         <SplashScreen />
         <AuthProvider>
-          <div className="pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            {children}
-          </div>
-          <BottomNav />
+          <PlayerProfileProvider>
+            <div className="pb-[calc(6rem+env(safe-area-inset-bottom))]">
+              {children}
+            </div>
+            <BottomNav />
+          </PlayerProfileProvider>
         </AuthProvider>
       </body>
     </html>

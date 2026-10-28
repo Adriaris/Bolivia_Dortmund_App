@@ -11,7 +11,8 @@ import Button from '@/components/ui/Button'
 import CaptainBadge from '@/components/ui/CaptainBadge'
 import GuestBadge from '@/components/ui/GuestBadge'
 import PlayerAvatar from '@/components/ui/PlayerAvatar'
-import PhotoEditModal from '@/components/players/PhotoEditModal'
+import PlayerLink from '@/components/players/PlayerLink'
+import { PHOTO_CHANGED_EVENT, type PhotoChangedDetail } from '@/components/players/PhotoEditModal'
 import PlayerIdentityBar from '@/components/players/PlayerIdentityBar'
 import PlayerAccessModal from '@/components/players/PlayerAccessModal'
 import ReleaseAccountModal from '@/components/players/ReleaseAccountModal'
@@ -46,7 +47,6 @@ function JugadoresContent() {
   const [showForm, setShowForm] = useState(false)
   const [showAccess, setShowAccess] = useState(false)
   const [releaseTarget, setReleaseTarget] = useState<Player | null>(null)
-  const [photoTarget, setPhotoTarget] = useState<Player | null>(null)
 
   const wantsAccess = searchParams.get('soy') === '1'
   const nextPath = safeNextPath(searchParams.get('next'))
@@ -79,6 +79,16 @@ function JugadoresContent() {
   }, [loadRegistered])
 
   useEffect(() => { void load() }, [load])
+
+  // Fotos cambiadas desde la ficha del jugador
+  useEffect(() => {
+    const onPhoto = (e: Event) => {
+      const { playerId: id, photoPath } = (e as CustomEvent<PhotoChangedDetail>).detail
+      setPlayers((prev) => prev.map((x) => (x.id === id ? { ...x, photo_path: photoPath } : x)))
+    }
+    window.addEventListener(PHOTO_CHANGED_EVENT, onPhoto)
+    return () => window.removeEventListener(PHOTO_CHANGED_EVENT, onPhoto)
+  }, [])
 
   // Deep link: ?soy=1 abre el selector; si ya hay jugador en sesión, ir directo a `next`
   useEffect(() => {
@@ -143,18 +153,8 @@ function JugadoresContent() {
           key={p.id}
           className={`flex items-center gap-3 px-4 py-3.5 ${i < list.length - 1 ? 'border-b border-[#1f1f1f]' : ''}`}
         >
-          {isAdmin || p.id === playerId ? (
-            <button
-              type="button"
-              onClick={() => setPhotoTarget(p)}
-              aria-label={`Foto de ${p.name}`}
-              className="shrink-0 touch-manipulation"
-            >
-              <PlayerAvatar player={p} className="w-10 h-10" />
-            </button>
-          ) : (
-            <PlayerAvatar player={p} className="w-10 h-10" />
-          )}
+          <PlayerLink player={p} className="flex items-center gap-3 flex-1 min-w-0">
+          <PlayerAvatar player={p} className="w-10 h-10" />
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-medium truncate">{p.name}</p>
             <p className="text-zinc-600 text-xs flex items-center">
@@ -164,6 +164,7 @@ function JugadoresContent() {
               {p.is_guest && <GuestBadge />}
             </p>
           </div>
+          </PlayerLink>
           {registeredIds.has(p.id) && (
             isAdmin ? (
               <button
@@ -368,15 +369,6 @@ function JugadoresContent() {
           nextPath={nextPath}
           onClose={() => setShowAccess(false)}
           onRegisteredChange={loadRegistered}
-        />
-      )}
-
-      {photoTarget && (
-        <PhotoEditModal
-          player={photoTarget}
-          asAdmin={photoTarget.id !== playerId}
-          onClose={() => setPhotoTarget(null)}
-          onChanged={(path) => setPhotoPath(photoTarget.id, path)}
         />
       )}
 
