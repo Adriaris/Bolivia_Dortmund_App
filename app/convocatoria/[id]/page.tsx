@@ -1,8 +1,7 @@
 import { cache } from 'react'
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import BackLink from '@/components/ui/BackLink'
 import { getMatch, getTournamentPlayers } from '@/lib/supabase/queries'
 import {
   getAllPlayers,
@@ -67,14 +66,8 @@ export default async function ConvocatoriaPage(props: PageProps<'/convocatoria/[
   return (
     <main className="safe-top min-h-screen bg-black px-4 py-6 max-w-lg mx-auto pb-10">
       <div className="flex items-center gap-3 mb-5">
-        <Link
-          href="/"
-          aria-label="Volver al inicio"
-          className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#141414] border border-[#2a2a2a] text-zinc-400 hover:text-white transition-colors shrink-0"
-        >
-          <ArrowLeft size={16} />
-        </Link>
-        <h1 className="text-base font-bold text-white truncate">vs {match.opponent_name}</h1>
+        <BackLink href="/" label="Volver al inicio" />
+        <h1 className="text-xl font-black text-white tracking-tight leading-tight truncate">vs {match.opponent_name}</h1>
       </div>
 
       <ConvocatoriaClient

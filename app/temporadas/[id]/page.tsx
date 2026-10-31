@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Trophy } from 'lucide-react'
+import { Trophy } from 'lucide-react'
+import BackLink from '@/components/ui/BackLink'
 import {
   getMatches,
   getMatchEvents,
@@ -74,14 +74,9 @@ export default async function TemporadaPage({
     <main className="min-h-screen bg-black px-4 pb-6 max-w-lg mx-auto">
       {/* Header sticky */}
       <div className="sticky-header sticky z-10 bg-black -mx-4 px-4 pb-3 mb-5 flex items-center gap-3">
-        <Link
-          href="/"
-          className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#141414] border border-[#2a2a2a] text-zinc-400 hover:text-white transition-colors shrink-0"
-        >
-          <ArrowLeft size={16} />
-        </Link>
+        <BackLink href="/" label="Volver al inicio" />
         <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-black text-white tracking-tight leading-tight truncate">
+          <h1 className="text-xl font-black text-white tracking-tight leading-tight truncate">
             {tournament.short_name} · {tournament.season}
           </h1>
           <p className="text-xs text-zinc-600 uppercase tracking-widest">Temporada archivada</p>

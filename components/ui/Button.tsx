@@ -39,7 +39,7 @@ export default function Button({
       {...props}
       disabled={disabled}
       className={[
-        'inline-flex items-center justify-center gap-2 font-semibold transition-colors duration-100 touch-manipulation select-none',
+        'inline-flex items-center justify-center gap-2 font-semibold transition-[color,background-color,border-color,transform] duration-150 ease-out active:scale-[0.98] touch-manipulation select-none',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-bol-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-black',
         variantClasses[variant],
         sizeClasses[size],

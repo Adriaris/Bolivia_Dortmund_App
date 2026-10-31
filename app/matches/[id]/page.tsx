@@ -1,6 +1,5 @@
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
+import BackLink from '@/components/ui/BackLink'
 import { getMatch, getMatchEvents, getPlayers, getTournaments } from '@/lib/supabase/queries'
 import TeamLogo from '@/components/ui/TeamLogo'
 import { getMatchMvps } from '@/lib/supabase/mvp'
@@ -25,18 +24,13 @@ export default async function MatchPage(props: PageProps<'/matches/[id]'>) {
     <main className="safe-top min-h-screen bg-black px-4 py-6 max-w-lg mx-auto pb-10">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Link
-          href="/"
-          className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#141414] border border-[#2a2a2a] text-zinc-400 hover:text-white transition-colors shrink-0"
-        >
-          <ArrowLeft size={16} />
-        </Link>
+        <BackLink href="/" label="Volver al inicio" />
         <TeamLogo name={match.opponent_name} size={32} />
         <div className="min-w-0">
-          <h1 className="text-base font-bold text-white truncate">
+          <h1 className="text-xl font-black text-white tracking-tight leading-tight truncate">
             vs {match.opponent_name}
           </h1>
-          <p className="text-xs text-zinc-600">
+          <p className="text-xs text-zinc-600 truncate mt-0.5">
             {match.match_date
               ? new Date(match.match_date + 'T00:00:00').toLocaleDateString('es-ES', {
                   day: 'numeric', month: 'long', year: 'numeric',

@@ -48,7 +48,7 @@ function PlayerList({
   nullLabel?: string
 }) {
   return (
-    <div className="flex flex-col gap-1.5 mb-5 max-h-44 overflow-y-auto">
+    <div className="flex flex-col gap-1.5 mb-5 max-h-44 overflow-y-auto overflow-x-hidden overscroll-contain">
       {allowNull && (
         <button
           onClick={() => onSelect(null)}

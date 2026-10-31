@@ -7,6 +7,8 @@ import { LogOut, ShieldCheck } from 'lucide-react'
 import { OUR_LOGO_STARS } from '@/lib/teams'
 import { useAuth } from './AuthProvider'
 import { signOut } from '@/lib/auth'
+import { useScrollLock } from '@/lib/scroll-lock'
+import { useAnimatedClose } from '@/lib/use-animated-close'
 
 const TAP_COUNT = 5
 const TAP_WINDOW = 2000 // ms
@@ -58,26 +60,39 @@ export default function HomeHeader({ season }: { season?: string }) {
       </div>
 
       {/* Admin logout sheet */}
-      {sheet && (
-        <div className="fixed inset-0 z-50 bg-black/70" onClick={() => setSheet(false)}>
-          <div
-            className="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#111] border-t border-[#2a2a2a] rounded-t-3xl px-4 pt-4 pb-10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-10 h-1 bg-zinc-700 rounded-full mx-auto mb-6" />
-            <p className="text-xs text-zinc-500 uppercase tracking-widest mb-4 text-center font-bold">
-              Sesión de administrador
-            </p>
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl bg-red-500/10 text-red-400 font-bold text-base transition-transform duration-75 active:scale-95 touch-manipulation"
-            >
-              <LogOut size={18} />
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
-      )}
+      {sheet && <AdminSheet onLogout={handleLogout} onClose={() => setSheet(false)} />}
     </>
+  )
+}
+
+/** Hoja inferior con el cierre de sesión del admin (entra y sale animada). */
+function AdminSheet({ onLogout, onClose }: { onLogout: () => void; onClose: () => void }) {
+  // Bloquea el scroll de la página mientras la hoja está abierta
+  useScrollLock()
+  const { closing, requestClose } = useAnimatedClose(onClose)
+
+  return (
+    <div
+      data-closing={closing || undefined}
+      className={`modal-backdrop fixed inset-0 z-50 bg-black/70 touch-none ${closing ? 'pointer-events-none' : ''}`}
+      onClick={requestClose}
+    >
+      <div
+        className="modal-sheet absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#111] border-t border-[#2a2a2a] rounded-t-3xl px-4 pt-4 pb-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-10 h-1 bg-zinc-700 rounded-full mx-auto mb-6" />
+        <p className="text-xs text-zinc-500 uppercase tracking-widest mb-4 text-center font-bold">
+          Sesión de administrador
+        </p>
+        <button
+          onClick={onLogout}
+          className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl bg-red-500/10 text-red-400 font-bold text-base transition-transform duration-75 active:scale-95 touch-manipulation"
+        >
+          <LogOut size={18} />
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
   )
 }

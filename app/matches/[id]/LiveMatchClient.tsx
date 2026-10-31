@@ -350,6 +350,9 @@ export default function LiveMatchClient({
   }
 
   const isActive = match.status === 'first_half' || match.status === 'second_half'
+  // Antes del partido, "Ver convocatoria" / "Compartir" van bajo el marcador y encima del crono;
+  // una vez jugado, el bloque de votación/MVP se queda bajo los controles.
+  const convocatoriaUnderScore = match.status === 'pending' || match.status === 'postponed'
 
   return (
     <div className="flex flex-col gap-5">
@@ -367,6 +370,9 @@ export default function LiveMatchClient({
         )}
       </div>
 
+      {/* Convocatoria (partido por jugar) */}
+      {convocatoriaUnderScore && <MatchMvpPanel match={match} initialMvps={initialMvps} isAdmin={isAdmin} />}
+
       {/* Cronómetro */}
       <Clock match={match} />
 
@@ -383,8 +389,8 @@ export default function LiveMatchClient({
         />
       )}
 
-      {/* Convocatoria / votación MVP / MVP confirmado */}
-      <MatchMvpPanel match={match} initialMvps={initialMvps} isAdmin={isAdmin} />
+      {/* Votación MVP / MVP confirmado (partido jugado) */}
+      {!convocatoriaUnderScore && <MatchMvpPanel match={match} initialMvps={initialMvps} isAdmin={isAdmin} />}
 
       {/* Botones de gol/parada (solo admin, solo cuando activo) */}
       {isAdmin && match.status !== 'finished' && match.status !== 'walkover' && (
@@ -393,7 +399,7 @@ export default function LiveMatchClient({
             <button
               onClick={() => setModal({ type: 'our_goal' })}
               disabled={!isActive || loading}
-              className="flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-bol-yellow text-black font-bold text-sm hover:bg-[#e8d400] active:bg-[#d6c400] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              className="press flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-bol-yellow text-black font-bold text-sm hover:bg-[#e8d400] active:bg-[#d6c400] disabled:opacity-30 disabled:pointer-events-none"
             >
               <GiSoccerBall size={26} />
               Gol nuestro
@@ -401,7 +407,7 @@ export default function LiveMatchClient({
             <button
               onClick={() => setModal({ type: 'opponent_goal' })}
               disabled={!isActive || loading}
-              className="flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-[#141414] border border-[#2a2a2a] text-red-400 font-bold text-sm hover:bg-[#1f1f1f] active:bg-[#2a2a2a] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              className="press flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-[#141414] border border-[#2a2a2a] text-red-400 font-bold text-sm hover:bg-[#1f1f1f] active:bg-[#2a2a2a] disabled:opacity-30 disabled:pointer-events-none"
             >
               <GiSoccerBall size={26} />
               Gol rival
@@ -410,7 +416,7 @@ export default function LiveMatchClient({
           <button
             onClick={() => setModal({ type: 'save' })}
             disabled={!isActive || loading}
-            className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#0a1520] border border-cyan-900/40 text-cyan-400 font-bold text-sm hover:bg-[#0f1f30] active:bg-[#162840] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            className="press flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#0a1520] border border-cyan-900/40 text-cyan-400 font-bold text-sm hover:bg-[#0f1f30] active:bg-[#162840] disabled:opacity-30 disabled:pointer-events-none"
           >
             <GiGoalKeeper size={22} />
             Parada

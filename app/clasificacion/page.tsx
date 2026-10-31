@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import BackLink from '@/components/ui/BackLink'
 import { getCurrentTournament, getStandings } from '@/lib/supabase/queries'
 import SyncButton from './SyncButton'
 import StandingsTable from './StandingsTable'
@@ -23,14 +22,9 @@ export default async function ClasificacionPage() {
       {/* Header sticky */}
       <div className="sticky-header sticky z-10 bg-black -mx-3 px-4 pb-3 mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#141414] border border-[#2a2a2a] text-zinc-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft size={16} />
-          </Link>
+          <BackLink href="/" label="Volver al inicio" />
           <div>
-            <h1 className="text-lg font-black text-white tracking-tight leading-tight">Clasificación</h1>
+            <h1 className="text-xl font-black text-white tracking-tight leading-tight">Clasificación</h1>
             <p className="text-xs text-zinc-600 uppercase tracking-widest">
               {tournament ? `F7 Baix Llobregat ${tournament.season} · ${tournament.short_name}` : 'F7 Baix Llobregat'}
             </p>

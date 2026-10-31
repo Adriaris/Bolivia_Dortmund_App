@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import BackLink from '@/components/ui/BackLink'
 import { createMatch, getTournaments } from '@/lib/supabase/queries'
 import { CURRENT_OPPONENTS } from '@/lib/teams'
 import Button from '@/components/ui/Button'
@@ -55,13 +54,8 @@ export default function NewMatchPage() {
     <main className="safe-top min-h-screen bg-black px-4 py-6 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-10">
-        <Link
-          href="/"
-          className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#141414] border border-[#2a2a2a] text-zinc-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft size={16} />
-        </Link>
-        <h1 className="text-lg font-bold text-white">Nuevo partido</h1>
+        <BackLink href="/" label="Volver al inicio" />
+        <h1 className="text-xl font-black text-white tracking-tight leading-tight">Nuevo partido</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">

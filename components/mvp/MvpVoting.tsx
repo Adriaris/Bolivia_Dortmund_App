@@ -256,7 +256,7 @@ export default function MvpVoting({
       )}
 
       {selected && (
-        <Modal title={status.me_has_voted ? 'Cambiar voto' : 'Confirmar voto'} onClose={() => !busy && setSelected(null)}>
+        <Modal title={status.me_has_voted ? 'Cambiar voto' : 'Confirmar voto'} onClose={() => setSelected(null)} closable={!busy}>
           <div className="flex flex-col gap-4 pb-2">
             <p className="text-sm text-zinc-300">
               {status.me_has_voted && myVote ? (
@@ -286,7 +286,7 @@ export default function MvpVoting({
       )}
 
       {confirmClose && (
-        <Modal title="Cerrar votación" onClose={() => !busy && setConfirmClose(false)}>
+        <Modal title="Cerrar votación" onClose={() => setConfirmClose(false)} closable={!busy}>
           <div className="flex flex-col gap-4 pb-2">
             <p className="text-sm text-zinc-300">
               El MVP se decidirá con los <span className="font-bold text-white">{status.voted}</span>{' '}

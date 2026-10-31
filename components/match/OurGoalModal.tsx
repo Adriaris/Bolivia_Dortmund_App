@@ -38,7 +38,7 @@ function PlayerButton({
       className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-[#1f1f1f] hover:bg-[#2a2a2a] active:bg-[#333] transition-colors text-left"
     >
       <PlayerAvatar player={player} className="w-9 h-9" fallbackClassName="bg-[#2a2a2a] text-white font-bold text-xs" />
-      <span className="font-medium text-white flex-1 text-sm">{player.name}</span>
+      <span className="font-medium text-white flex-1 min-w-0 truncate text-sm">{player.name}</span>
       <span className="text-xs text-zinc-600">{player.position}</span>
       {player.is_captain && <CaptainBadge />}
       {player.is_guest && <GuestBadge />}
@@ -78,7 +78,7 @@ export default function OurGoalModal({ players, onSave, onClose, loading }: OurG
 
       {/* Paso 1: Goleador */}
       {step === 'scorer' && (
-        <div className="flex flex-col gap-2">
+        <div key="scorer" className="step-in flex flex-col gap-2">
           {players.map((p) => (
             <PlayerButton key={p.id} player={p} onClick={() => handleScorerSelect(p.id)} />
           ))}
@@ -87,7 +87,7 @@ export default function OurGoalModal({ players, onSave, onClose, loading }: OurG
 
       {/* Paso 2: Asistencia */}
       {step === 'assist' && (
-        <div className="flex flex-col gap-2">
+        <div key="assist" className="step-in flex flex-col gap-2">
           <button
             onClick={() => handleAssistSelect(null)}
             className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-[#1f1f1f] hover:bg-[#2a2a2a] active:bg-[#333] transition-colors text-left"
@@ -106,7 +106,7 @@ export default function OurGoalModal({ players, onSave, onClose, loading }: OurG
 
       {/* Paso 3: Tipo de gol */}
       {step === 'type' && (
-        <div>
+        <div key="type" className="step-in">
           <div className="flex flex-col gap-2 mb-6">
             {goalTypes.map(({ key, label, icon }) => (
               <button

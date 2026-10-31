@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import type { LeagueResult } from '@/lib/types'
 import { getLeagueResultsByTeam } from '@/lib/supabase/queries'
 import { TEAM_LOGOS } from '@/lib/teams'
+import { useScrollLock } from '@/lib/scroll-lock'
 
 function decodeHtmlEntities(s: string): string {
   return s
@@ -40,6 +41,9 @@ export default function TeamResults({ team, tournamentId, logoByTeam, onClose }:
   const [dragY, setDragY] = useState(0)
   const dragStart = useRef<number | null>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
+
+  // Bloquea el scroll de la página mientras la hoja está abierta
+  useScrollLock()
 
   useEffect(() => {
     getLeagueResultsByTeam(team, tournamentId)
@@ -89,7 +93,7 @@ export default function TeamResults({ team, tournamentId, logoByTeam, onClose }:
 
   return (
     <div
-      className={`fixed inset-0 z-50 transition-colors duration-300 ${visible && dragY === 0 ? 'bg-black/70' : 'bg-black/0'}`}
+      className={`fixed inset-0 z-50 touch-none transition-colors duration-300 ${visible && dragY === 0 ? 'bg-black/70' : 'bg-black/0'}`}
       onClick={close}
     >
       <div
@@ -124,7 +128,7 @@ export default function TeamResults({ team, tournamentId, logoByTeam, onClose }:
         </div>
 
         {/* Body */}
-        <div data-scroll className="overflow-y-auto px-4 pt-3 pb-28" style={{ maxHeight: 'calc(92vh - 6.5rem)' }}>
+        <div data-scroll className="overflow-y-auto overflow-x-hidden overscroll-none touch-pan-y px-4 pt-3 pb-28" style={{ maxHeight: 'calc(92vh - 6.5rem)' }}>
           {loading ? (
             <p className="text-zinc-500 text-sm text-center py-8">Cargando...</p>
           ) : played.length === 0 ? (

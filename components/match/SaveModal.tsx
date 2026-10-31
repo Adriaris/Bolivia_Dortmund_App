@@ -43,7 +43,7 @@ export default function SaveModal({ players, matchGoalkeeperId, onSave, onClose,
         <p className="text-xs text-zinc-500 uppercase tracking-widest">Portero</p>
       </div>
 
-      <div className="flex flex-col gap-2 mb-6 max-h-72 overflow-y-auto">
+      <div className="flex flex-col gap-2 mb-6 max-h-72 overflow-y-auto overflow-x-hidden overscroll-contain">
         {ordered.map((p) => (
           <button
             key={p.id}

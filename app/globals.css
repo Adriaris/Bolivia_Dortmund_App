@@ -196,6 +196,121 @@ input[type='date'] {
   background: linear-gradient(180deg, #D52B1E 0 33.3%, #F9E300 33.3% 66.6%, #007934 66.6% 100%);
 }
 
+/* Modales y hojas inferiores.
+   - .modal-panel: altura máxima en dvh (viewport real en móvil, sin la barra de Safari),
+     con fallback en vh.
+   - .modal-scroll: scroll SOLO vertical. Con `overflow-y: auto` a solas, CSS pone
+     `overflow-x: auto` implícitamente y cualquier hijo un píxel más ancho permitía
+     desplazar en los dos ejes (un gesto vertical algo torcido movía el contenido en
+     horizontal). `touch-action: pan-y` hace que el dedo solo desplace en vertical y
+     `overscroll-behavior: contain` evita que, al llegar al final, el gesto siga
+     desplazando la página de fondo. */
+.modal-panel {
+  max-height: 90vh;
+  max-height: 90dvh;
+}
+.modal-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Movimiento ─────────────────────────────────────────────────────────────
+   Entrada de página: fundido corto (solo opacidad: un transform en <main>
+   convertiría los modales `position: fixed` en hijos suyos mientras dura). */
+@keyframes page-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+main {
+  animation: page-in 0.22s ease-out both;
+}
+
+/* Modales y hojas: el fondo se funde y el panel sube (móvil) o se acerca
+   (pantallas anchas). `data-closing` en el fondo reproduce la salida; la
+   duración de salida debe coincidir con MODAL_CLOSE_MS (lib/use-animated-close.ts). */
+@keyframes backdrop-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes sheet-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(18px); }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes dialog-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(6px) scale(0.98); }
+}
+.modal-backdrop {
+  animation: backdrop-in 0.22s ease-out both;
+}
+.modal-backdrop[data-closing] {
+  animation: backdrop-out 0.18s ease-in both;
+}
+.modal-panel,
+.modal-sheet {
+  animation: sheet-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.modal-backdrop[data-closing] .modal-panel,
+.modal-backdrop[data-closing] .modal-sheet {
+  animation: sheet-out 0.18s ease-in both;
+}
+@media (min-width: 640px) {
+  .modal-panel {
+    animation-name: dialog-in;
+  }
+  .modal-backdrop[data-closing] .modal-panel {
+    animation-name: dialog-out;
+  }
+}
+
+/* Cambio de paso dentro de un modal (goleador → asistencia → tipo, PIN…) */
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.step-in {
+  animation: step-in 0.2s ease-out both;
+}
+
+/* Botones grandes del partido: se hunden un poco al pulsar */
+.press {
+  transition: background-color 0.15s ease-out, color 0.15s ease-out, transform 0.15s ease-out;
+}
+.press:active {
+  transform: scale(0.98);
+}
+
+/* Quien tiene activado "reducir movimiento" ve los cambios al instante */
+@media (prefers-reduced-motion: reduce) {
+  main,
+  .modal-backdrop,
+  .modal-panel,
+  .modal-sheet,
+  .step-in,
+  .splash-logo,
+  .splash-bg,
+  .summary-open,
+  .champion-banner,
+  .stats-content,
+  .tab-pop {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+  }
+  .press,
+  .modal-backdrop * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Ocultar scrollbar */
 * {
   scrollbar-width: none; /* Firefox */

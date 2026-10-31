@@ -82,7 +82,7 @@ export default function PhotoEditModal({ player, asAdmin = false, onClose, onCha
 
   if (pendingFile) {
     return (
-      <Modal title="Encuadra la foto" onClose={() => !busy && setPendingFile(null)}>
+      <Modal title="Encuadra la foto" onClose={() => setPendingFile(null)} closable={!busy}>
         <PhotoCropper
           file={pendingFile}
           busy={busy === 'upload'}
@@ -94,7 +94,7 @@ export default function PhotoEditModal({ player, asAdmin = false, onClose, onCha
   }
 
   return (
-    <Modal title={asAdmin ? `Foto de ${current.alias ?? current.name}` : 'Tu foto de perfil'} onClose={() => !busy && onClose()}>
+    <Modal title={asAdmin ? `Foto de ${current.alias ?? current.name}` : 'Tu foto de perfil'} onClose={onClose} closable={!busy}>
       <div className="flex flex-col items-center gap-4 pb-2">
         <div className="relative">
           <PlayerAvatar

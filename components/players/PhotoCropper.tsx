@@ -249,7 +249,7 @@ export default function PhotoCropper({ file, busy = false, onCancel, onConfirm }
           step={0.01}
           value={zoom}
           onChange={(e) => applyZoom(Number(e.target.value))}
-          className="flex-1 accent-[#F9E300]"
+          className="flex-1 accent-[#F9E300] touch-none"
           aria-label="Zoom"
           disabled={working || !natural}
         />

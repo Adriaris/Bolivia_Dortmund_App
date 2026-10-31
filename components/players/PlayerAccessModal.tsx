@@ -177,7 +177,7 @@ export default function PlayerAccessModal({
     <Modal title={titles[step]} onClose={onClose}>
       {/* ── Paso 1: elegir jugador ── */}
       {step === 'pick' && (
-        <div className="flex flex-col gap-4">
+        <div className="step-in flex flex-col gap-4">
           <p className="text-sm text-zinc-300 bg-bol-yellow/10 border border-bol-yellow/30 rounded-xl px-3 py-2.5 flex gap-2">
             <AlertTriangle size={16} className="text-bol-yellow shrink-0 mt-0.5" />
             <span>
@@ -214,7 +214,7 @@ export default function PlayerAccessModal({
 
       {/* ── Paso 2a: crear PIN ── */}
       {step === 'create' && selected && (
-        <form onSubmit={handleCreate} className="flex flex-col gap-4">
+        <form onSubmit={handleCreate} className="step-in flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 flex items-center justify-center rounded-full bg-bol-yellow text-black font-black shrink-0">
               {selected.number}
@@ -276,7 +276,7 @@ export default function PlayerAccessModal({
 
       {/* ── Paso 2b: entrar con PIN ── */}
       {step === 'enter' && selected && (
-        <form onSubmit={handleEnter} className="flex flex-col gap-4">
+        <form onSubmit={handleEnter} className="step-in flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 flex items-center justify-center rounded-full bg-bol-yellow text-black font-black shrink-0">
               {selected.number}
@@ -314,7 +314,7 @@ export default function PlayerAccessModal({
 
       {/* ── Paso 3: hecho ── */}
       {step === 'done' && selected && (
-        <div className="flex flex-col items-center text-center gap-4 py-2">
+        <div className="step-in flex flex-col items-center text-center gap-4 py-2">
           <CheckCircle2 size={44} className="text-bol-yellow" />
           <div>
             <p className="text-lg font-black text-white">Eres {selected.name}</p>
