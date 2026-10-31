@@ -227,30 +227,77 @@ export function shortName(p: Pick<Player, 'name' | 'alias'>): string {
 }
 
 // ------------------------------------------------------------
+// Escenarios: dos pizarras independientes para comparar alineaciones
+// ------------------------------------------------------------
+
+export type ScenarioIndex = 0 | 1
+
+export interface BoardWorkspace {
+  boards: [BoardState, BoardState]
+  active: ScenarioIndex
+}
+
+export function initialWorkspace(): BoardWorkspace {
+  return { boards: [initialBoard(), initialBoard()], active: 0 }
+}
+
+/** Aplica un cambio solo al escenario activo */
+export function updateActive(ws: BoardWorkspace, fn: (b: BoardState) => BoardState): BoardWorkspace {
+  const boards: [BoardState, BoardState] = [ws.boards[0], ws.boards[1]]
+  boards[ws.active] = fn(boards[ws.active])
+  return { ...ws, boards }
+}
+
+/** Copia el escenario activo sobre el otro (punto de partida para una variante) */
+export function copyActiveToOther(ws: BoardWorkspace): BoardWorkspace {
+  const other: ScenarioIndex = ws.active === 0 ? 1 : 0
+  const boards: [BoardState, BoardState] = [ws.boards[0], ws.boards[1]]
+  boards[other] = structuredClone(ws.boards[ws.active])
+  return { ...ws, boards }
+}
+
+// ------------------------------------------------------------
 // Persistencia en el móvil (la pizarra es un cuaderno local, no va a la BD)
 // ------------------------------------------------------------
 
-export const BOARD_STORAGE_KEY = 'bvd-board-v1'
+const LEGACY_STORAGE_KEY = 'bvd-board-v1'
+export const BOARD_STORAGE_KEY = 'bvd-board-v2'
 
-export function loadBoard(): BoardState | null {
+function parseBoard(raw: unknown): BoardState | null {
+  const parsed = raw as Partial<BoardState> | null
+  if (!parsed || !Array.isArray(parsed.tokens) || !parsed.ball || !parsed.formation) return null
+  if (!FORMATION_KEYS.includes(parsed.formation.ours) || !FORMATION_KEYS.includes(parsed.formation.rival)) return null
+  if (parsed.tokens.length !== initialBoard().tokens.length) return null
+  // Versiones anteriores no guardaban opciones
+  return { ...parsed, options: { ...DEFAULT_OPTIONS, ...parsed.options } } as BoardState
+}
+
+export function loadWorkspace(): BoardWorkspace | null {
   try {
     const raw = window.localStorage.getItem(BOARD_STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<BoardState>
-    if (!Array.isArray(parsed.tokens) || !parsed.ball || !parsed.formation) return null
-    if (!FORMATION_KEYS.includes(parsed.formation.ours) || !FORMATION_KEYS.includes(parsed.formation.rival)) return null
-    const expected = initialBoard().tokens.length
-    if (parsed.tokens.length !== expected) return null
-    // Versiones anteriores no guardaban opciones
-    return { ...parsed, options: { ...DEFAULT_OPTIONS, ...parsed.options } } as BoardState
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<BoardWorkspace>
+      if (!Array.isArray(parsed.boards)) return null
+      const a = parseBoard(parsed.boards[0])
+      const b = parseBoard(parsed.boards[1])
+      if (!a || !b) return null
+      return { boards: [a, b], active: parsed.active === 1 ? 1 : 0 }
+    }
+    // Pizarra guardada con la versión de un solo escenario → pasa a ser el escenario 1
+    const legacy = window.localStorage.getItem(LEGACY_STORAGE_KEY)
+    if (legacy) {
+      const board = parseBoard(JSON.parse(legacy))
+      if (board) return { boards: [board, initialBoard()], active: 0 }
+    }
+    return null
   } catch {
     return null
   }
 }
 
-export function saveBoard(state: BoardState): void {
+export function saveWorkspace(ws: BoardWorkspace): void {
   try {
-    window.localStorage.setItem(BOARD_STORAGE_KEY, JSON.stringify(state))
+    window.localStorage.setItem(BOARD_STORAGE_KEY, JSON.stringify(ws))
   } catch {
     // Sin almacenamiento (modo privado, etc.): la pizarra sigue funcionando en memoria
   }

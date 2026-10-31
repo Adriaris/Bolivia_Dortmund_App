@@ -1,8 +1,8 @@
 'use client'
 
-import { Eraser, RotateCcw, Sparkles, UserX } from 'lucide-react'
+import { Copy, Eraser, RotateCcw, Sparkles, UserX } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
-import { FORMATION_KEYS, type BoardSide, type BoardState, type FormationKey } from '@/lib/board'
+import { FORMATION_KEYS, type BoardSide, type BoardState, type FormationKey, type ScenarioIndex } from '@/lib/board'
 
 interface BoardOptionsModalProps {
   board: BoardState
@@ -13,6 +13,8 @@ interface BoardOptionsModalProps {
   onClearPlayers: () => void
   onResetPositions: () => void
   onResetAll: () => void
+  onCopyToOther: () => void
+  activeScenario: ScenarioIndex
   onClose: () => void
 }
 
@@ -41,8 +43,10 @@ function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange
 }
 
 export default function BoardOptionsModal({
-  board, playersCount, onFormation, onToggle, onAutoFill, onClearPlayers, onResetPositions, onResetAll, onClose,
+  board, playersCount, onFormation, onToggle, onAutoFill, onClearPlayers, onResetPositions, onResetAll,
+  onCopyToOther, activeScenario, onClose,
 }: BoardOptionsModalProps) {
+  const otherScenario = activeScenario === 0 ? 2 : 1
   const assignedCount = board.tokens.filter((t) => t.side === 'ours' && t.playerId).length
 
   const formationRow = (side: BoardSide, label: string) => (
@@ -88,7 +92,7 @@ export default function BoardOptionsModal({
   )
 
   return (
-    <Modal title="Opciones de la pizarra" onClose={onClose}>
+    <Modal title={`Opciones · Escenario ${activeScenario + 1}`} onClose={onClose}>
       <div className="flex flex-col gap-5">
         <section className="flex flex-col gap-3">
           <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Formación</p>
@@ -124,6 +128,14 @@ export default function BoardOptionsModal({
           <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Posiciones</p>
           {action(<RotateCcw size={16} />, 'Recolocar fichas y balón', onResetPositions)}
           {action(<Eraser size={16} />, 'Empezar de cero', onResetAll, false, true)}
+        </section>
+
+        <section className="flex flex-col gap-2">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Escenarios</p>
+          {action(<Copy size={16} />, `Copiar este escenario al ${otherScenario}`, onCopyToOther)}
+          <p className="text-[11px] text-zinc-600 px-1">
+            Sustituye el escenario {otherScenario} por una copia de este, para probar una variante y compararlas con el selector.
+          </p>
         </section>
 
         <p className="text-[11px] text-zinc-600 text-center leading-snug pb-1">

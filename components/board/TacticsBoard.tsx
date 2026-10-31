@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import { ChevronLeft, SlidersHorizontal } from 'lucide-react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { SlidersHorizontal } from 'lucide-react'
+import BackLink from '@/components/ui/BackLink'
 import Pitch from './Pitch'
 import { Ball, Piece } from './BoardToken'
 import PlayerPickerModal from './PlayerPickerModal'
@@ -12,15 +12,20 @@ import {
   assignPlayer,
   autoFill,
   clearPlayers,
+  copyActiveToOther,
   initialBoard,
-  loadBoard,
+  initialWorkspace,
+  loadWorkspace,
   moveBall,
   moveToken,
   PITCH,
   resetPositions,
-  saveBoard,
+  saveWorkspace,
   setOption,
+  updateActive,
   type BoardState,
+  type BoardWorkspace,
+  type ScenarioIndex,
 } from '@/lib/board'
 import type { Player } from '@/lib/types'
 
@@ -33,7 +38,13 @@ const RATIO = PITCH.width / PITCH.length
 export default function TacticsBoard({ players }: TacticsBoardProps) {
   // Solo se renderiza en cliente (next/dynamic sin SSR), así que podemos leer el
   // estado guardado al inicializar sin desajustes de hidratación
-  const [board, setBoard] = useState<BoardState>(() => loadBoard() ?? initialBoard())
+  const [workspace, setWorkspace] = useState<BoardWorkspace>(() => loadWorkspace() ?? initialWorkspace())
+  const board = workspace.boards[workspace.active]
+  // Todos los cambios de fichas/opciones van al escenario activo
+  const setBoard = useCallback(
+    (fn: (b: BoardState) => BoardState) => setWorkspace((ws) => updateActive(ws, fn)),
+    []
+  )
   const [pickerFor, setPickerFor] = useState<string | null>(null)
   const [showOptions, setShowOptions] = useState(false)
   const [dragging, setDragging] = useState(false)
@@ -61,8 +72,8 @@ export default function TacticsBoard({ players }: TacticsBoardProps) {
 
   // Cada cambio se guarda en el móvil: la pizarra sobrevive a recargas
   useEffect(() => {
-    saveBoard(board)
-  }, [board])
+    saveWorkspace(workspace)
+  }, [workspace])
 
   const toPercent = useCallback((clientX: number, clientY: number) => {
     const rect = pitchRef.current?.getBoundingClientRect()
@@ -82,13 +93,7 @@ export default function TacticsBoard({ players }: TacticsBoardProps) {
     <div className="flex flex-col flex-1 min-h-0">
       {/* Cabecera compacta */}
       <div className="flex items-center gap-3 pb-3 shrink-0">
-        <Link
-          href="/jugadores"
-          className="w-9 h-9 -ml-1 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-          aria-label="Volver a la plantilla"
-        >
-          <ChevronLeft size={20} />
-        </Link>
+        <BackLink href="/jugadores" label="Volver a la plantilla" />
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-black text-white tracking-tight leading-tight">Pizarra</h1>
           <p className="text-xs text-zinc-600 uppercase tracking-widest mt-0.5">
@@ -105,6 +110,32 @@ export default function TacticsBoard({ players }: TacticsBoardProps) {
         </button>
       </div>
 
+      {/* Escenarios: dos pizarras para comparar */}
+      <div
+        role="tablist"
+        aria-label="Escenario"
+        className="grid grid-cols-2 gap-1 p-1 mb-3 rounded-xl bg-[#141414] border border-[#2a2a2a] shrink-0"
+      >
+        {([0, 1] as ScenarioIndex[]).map((i) => {
+          const active = workspace.active === i
+          return (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setWorkspace((ws) => ({ ...ws, active: i }))}
+              className={[
+                'py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors touch-manipulation',
+                active ? 'bg-bol-yellow text-black' : 'text-zinc-500 hover:text-zinc-300',
+              ].join(' ')}
+            >
+              Escenario {i + 1}
+            </button>
+          )
+        })}
+      </div>
+
       {/* Campo: ocupa todo el alto que queda */}
       <div ref={areaRef} className="flex-1 min-h-0 flex items-center justify-center -mx-4 sm:mx-0">
         <div
@@ -114,7 +145,7 @@ export default function TacticsBoard({ players }: TacticsBoardProps) {
         >
           <Pitch />
           {size.w > 0 && (
-            <>
+            <React.Fragment key={workspace.active}>
               {visibleTokens.map((t) => (
                 <Piece
                   key={t.id}
@@ -136,7 +167,7 @@ export default function TacticsBoard({ players }: TacticsBoardProps) {
                 onMove={(x, y) => setBoard((b) => moveBall(b, x, y))}
                 onDragStateChange={setDragging}
               />
-            </>
+            </React.Fragment>
           )}
         </div>
       </div>
@@ -150,7 +181,9 @@ export default function TacticsBoard({ players }: TacticsBoardProps) {
           onAutoFill={() => { setBoard((b) => autoFill(b, players)); setShowOptions(false) }}
           onClearPlayers={() => { setBoard((b) => clearPlayers(b)); setShowOptions(false) }}
           onResetPositions={() => { setBoard((b) => resetPositions(b)); setShowOptions(false) }}
-          onResetAll={() => { setBoard(initialBoard()); setShowOptions(false) }}
+          onResetAll={() => { setBoard(() => initialBoard()); setShowOptions(false) }}
+          onCopyToOther={() => { setWorkspace((ws) => copyActiveToOther(ws)); setShowOptions(false) }}
+          activeScenario={workspace.active}
           onClose={() => setShowOptions(false)}
         />
       )}
