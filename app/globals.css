@@ -204,3 +204,11 @@ input[type='date'] {
 *::-webkit-scrollbar {
   display: none; /* Chrome/Safari/WebKit */
 }
+
+/* Pizarra: número sobre la tricolor, legible en las tres franjas */
+.tricolor-number {
+  color: #fff;
+  -webkit-text-stroke: 0.045em #000;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}

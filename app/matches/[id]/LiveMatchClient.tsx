@@ -504,6 +504,7 @@ export default function LiveMatchClient({
       {modal.type === 'save' && (
         <SaveModal
           players={players}
+          matchGoalkeeperId={[...events].reverse().find((e) => e.event_type === 'save')?.scorer_player_id ?? null}
           onSave={handleSave}
           onClose={() => setModal({ type: 'none' })}
           loading={loading}

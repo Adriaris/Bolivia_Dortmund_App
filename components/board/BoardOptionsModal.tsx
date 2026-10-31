@@ -127,7 +127,7 @@ export default function BoardOptionsModal({
         </section>
 
         <p className="text-[11px] text-zinc-600 text-center leading-snug pb-1">
-          Arrastra las fichas y el balón. Toca una ficha amarilla o verde para elegir qué jugador es.
+          Arrastra las fichas y el balón. Toca una ficha tricolor para elegir qué jugador es.
         </p>
       </div>
     </Modal>

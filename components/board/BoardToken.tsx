@@ -9,6 +9,9 @@ import type { Player } from '@/lib/types'
 /** Desplazamiento máximo (px) para considerar que ha sido un toque y no un arrastre */
 const TAP_TOLERANCE = 8
 
+/** Bandera de Bolivia en tres franjas horizontales (rojo, amarillo, verde) */
+const TRICOLOR = 'bg-[linear-gradient(to_bottom,#D52B1E_0%,#D52B1E_33.3%,#F9E300_33.3%,#F9E300_66.6%,#007934_66.6%,#007934_100%)] text-black'
+
 interface DragHandlers {
   /** Posición del puntero → porcentaje del campo */
   toPercent: (clientX: number, clientY: number) => { x: number; y: number }
@@ -81,15 +84,9 @@ export function Piece({ token, player, size, showName = true, onTap, ...drag }: 
   const isOurs = token.side === 'ours'
   const isGk = token.role === 'POR'
 
-  const face = isOurs
-    ? isGk
-      ? 'bg-bol-green text-white'
-      : 'bg-bol-yellow text-black'
-    : isGk
-      ? 'bg-zinc-800 text-white'
-      : 'bg-white text-zinc-900'
-
-  const ring = isOurs ? 'ring-black/70' : 'ring-zinc-900/60'
+  // Nuestras fichas llevan la tricolor boliviana; las del rival van en blanco (portero gris)
+  const rivalFace = isGk ? 'bg-zinc-800 text-white' : 'bg-white text-zinc-900'
+  const ring = isOurs ? (isGk ? 'ring-[3px] ring-white' : 'ring-2 ring-black/80') : 'ring-2 ring-zinc-900/60'
   const label = player && showName ? shortName(player) : null
   const aria = isOurs
     ? player
@@ -106,15 +103,20 @@ export function Piece({ token, player, size, showName = true, onTap, ...drag }: 
       style={{ ...baseStyle(token.x, token.y), width: size, pointerEvents: 'auto' }}
     >
       <span
-        className={`${face} ${ring} ring-2 rounded-full flex items-center justify-center font-black tabular-nums shadow-[0_3px_8px_rgba(0,0,0,0.45)] pointer-events-none overflow-hidden`}
+        className={`${isOurs ? TRICOLOR : rivalFace} ${ring} rounded-full flex items-center justify-center font-black tabular-nums shadow-[0_3px_8px_rgba(0,0,0,0.45)] pointer-events-none overflow-hidden`}
         style={{ width: size, height: size, fontSize: size * 0.42 }}
       >
         {player ? (
-          <PlayerAvatar
-            player={player}
-            className="w-full h-full"
-            fallbackClassName={`${face} font-black`}
-          />
+          // Con foto, la tricolor queda como anillo alrededor de la imagen
+          <span className="w-full h-full rounded-full flex items-center justify-center" style={{ padding: isOurs ? Math.max(3, size * 0.11) : 0 }}>
+            <PlayerAvatar
+              player={player}
+              className="w-full h-full"
+              fallbackClassName={isOurs ? `${TRICOLOR} text-black font-black` : `${rivalFace} font-black`}
+            />
+          </span>
+        ) : isOurs ? (
+          <span className="tricolor-number">{token.label}</span>
         ) : (
           token.label
         )}

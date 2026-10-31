@@ -11,21 +11,30 @@ import type { Player } from '@/lib/types'
 
 interface SaveModalProps {
   players: Player[]
+  /** Portero que ya ha hecho paradas en este partido (el que juega hoy), si lo hay */
+  matchGoalkeeperId?: string | null
   onSave: (goalkeeperPlayerId: string | null) => void
   onClose: () => void
   loading: boolean
 }
 
-// Portero por defecto: el jugador de la plantilla con posición POR (hoy Pablo, #29).
-// Antes se usaba el dorsal 11 heredado del Chevere, que aquí es Carlos.
+// Portero por defecto: quien ya ha parado en este partido (el que juega hoy de portero);
+// si aún no hay paradas, el jugador de la plantilla con posición POR (hoy Pablo, #29).
 const isGoalkeeper = (p: Player) => p.position === 'POR'
 
-export default function SaveModal({ players, onSave, onClose, loading }: SaveModalProps) {
+export default function SaveModal({ players, matchGoalkeeperId, onSave, onClose, loading }: SaveModalProps) {
   const defaultGoalkeeper =
-    players.find((p) => isGoalkeeper(p) && !p.is_guest) ?? players.find(isGoalkeeper) ?? null
+    (matchGoalkeeperId ? players.find((p) => p.id === matchGoalkeeperId) : null) ??
+    players.find((p) => isGoalkeeper(p) && !p.is_guest) ??
+    players.find(isGoalkeeper) ??
+    null
   const [goalkeeperPlayerId, setGoalkeeperPlayerId] = useState<string | null>(
     defaultGoalkeeper?.id ?? null
   )
+  // El portero propuesto va el primero para no tener que buscarlo
+  const ordered = defaultGoalkeeper
+    ? [defaultGoalkeeper, ...players.filter((p) => p.id !== defaultGoalkeeper.id)]
+    : players
 
   return (
     <Modal title="Parada" onClose={onClose}>
@@ -35,7 +44,7 @@ export default function SaveModal({ players, onSave, onClose, loading }: SaveMod
       </div>
 
       <div className="flex flex-col gap-2 mb-6 max-h-72 overflow-y-auto">
-        {players.map((p) => (
+        {ordered.map((p) => (
           <button
             key={p.id}
             onClick={() => setGoalkeeperPlayerId(p.id)}
