@@ -31,11 +31,20 @@ export interface BoardOptions {
 
 export const DEFAULT_OPTIONS: BoardOptions = { showRival: true, showNames: true }
 
+/** Trazo del lápiz: puntos en porcentaje del campo */
+export interface Stroke {
+  color: string
+  points: [number, number][]
+}
+
+export const STROKE_COLORS = ['#ffffff', '#F9E300', '#D52B1E', '#111111'] as const
+
 export interface BoardState {
   tokens: BoardToken[]
   ball: { x: number; y: number }
   formation: Record<BoardSide, FormationKey>
   options: BoardOptions
+  strokes: Stroke[]
 }
 
 /** Campo de F7 en metros (ancho × largo); el dibujo usa estas proporciones */
@@ -118,7 +127,21 @@ export function initialBoard(): BoardState {
     ball: { x: 50, y: 50 },
     formation: { ...DEFAULT_FORMATION },
     options: { ...DEFAULT_OPTIONS },
+    strokes: [],
   }
+}
+
+export function addStroke(state: BoardState, stroke: Stroke): BoardState {
+  if (stroke.points.length < 2) return state
+  return { ...state, strokes: [...state.strokes, stroke] }
+}
+
+export function undoStroke(state: BoardState): BoardState {
+  return { ...state, strokes: state.strokes.slice(0, -1) }
+}
+
+export function clearStrokes(state: BoardState): BoardState {
+  return { ...state, strokes: [] }
 }
 
 export function setOption<K extends keyof BoardOptions>(state: BoardState, key: K, value: BoardOptions[K]): BoardState {
@@ -268,8 +291,12 @@ function parseBoard(raw: unknown): BoardState | null {
   if (!parsed || !Array.isArray(parsed.tokens) || !parsed.ball || !parsed.formation) return null
   if (!FORMATION_KEYS.includes(parsed.formation.ours) || !FORMATION_KEYS.includes(parsed.formation.rival)) return null
   if (parsed.tokens.length !== initialBoard().tokens.length) return null
-  // Versiones anteriores no guardaban opciones
-  return { ...parsed, options: { ...DEFAULT_OPTIONS, ...parsed.options } } as BoardState
+  // Versiones anteriores no guardaban opciones ni dibujo
+  return {
+    ...parsed,
+    options: { ...DEFAULT_OPTIONS, ...parsed.options },
+    strokes: Array.isArray(parsed.strokes) ? parsed.strokes : [],
+  } as BoardState
 }
 
 export function loadWorkspace(): BoardWorkspace | null {

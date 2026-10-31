@@ -1,17 +1,20 @@
 'use client'
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { SlidersHorizontal } from 'lucide-react'
+import { Eraser, Pencil, SlidersHorizontal, Undo2 } from 'lucide-react'
 import BackLink from '@/components/ui/BackLink'
 import Pitch from './Pitch'
 import { Ball, Piece } from './BoardToken'
 import PlayerPickerModal from './PlayerPickerModal'
 import BoardOptionsModal from './BoardOptionsModal'
+import DrawingLayer from './DrawingLayer'
 import {
+  addStroke,
   applyFormation,
   assignPlayer,
   autoFill,
   clearPlayers,
+  clearStrokes,
   copyActiveToOther,
   initialBoard,
   initialWorkspace,
@@ -22,6 +25,8 @@ import {
   resetPositions,
   saveWorkspace,
   setOption,
+  STROKE_COLORS,
+  undoStroke,
   updateActive,
   type BoardState,
   type BoardWorkspace,
@@ -48,6 +53,8 @@ export default function TacticsBoard({ players }: TacticsBoardProps) {
   const [pickerFor, setPickerFor] = useState<string | null>(null)
   const [showOptions, setShowOptions] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [drawMode, setDrawMode] = useState(false)
+  const [penColor, setPenColor] = useState<string>(STROKE_COLORS[0])
 
   // Tamaño del campo: el mayor que quepa en el hueco disponible manteniendo la proporción
   const areaRef = useRef<HTMLDivElement>(null)
@@ -110,37 +117,94 @@ export default function TacticsBoard({ players }: TacticsBoardProps) {
         </button>
       </div>
 
-      {/* Escenarios: dos pizarras para comparar */}
-      <div
-        role="tablist"
-        aria-label="Escenario"
-        className="grid grid-cols-2 gap-1 p-1 mb-3 rounded-xl bg-[#141414] border border-[#2a2a2a] shrink-0"
-      >
-        {([0, 1] as ScenarioIndex[]).map((i) => {
-          const active = workspace.active === i
-          return (
-            <button
-              key={i}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setWorkspace((ws) => ({ ...ws, active: i }))}
-              className={[
-                'py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors touch-manipulation',
-                active ? 'bg-bol-yellow text-black' : 'text-zinc-500 hover:text-zinc-300',
-              ].join(' ')}
-            >
-              Escenario {i + 1}
-            </button>
-          )
-        })}
+      {/* Escenarios (dos pizarras para comparar) + lápiz */}
+      <div className="flex items-stretch gap-2 mb-3 shrink-0">
+        <div
+          role="tablist"
+          aria-label="Escenario"
+          className="flex-1 grid grid-cols-2 gap-1 p-1 rounded-xl bg-[#141414] border border-[#2a2a2a]"
+        >
+          {([0, 1] as ScenarioIndex[]).map((i) => {
+            const active = workspace.active === i
+            return (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setWorkspace((ws) => ({ ...ws, active: i }))}
+                className={[
+                  'py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors touch-manipulation',
+                  active ? 'bg-bol-yellow text-black' : 'text-zinc-500 hover:text-zinc-300',
+                ].join(' ')}
+              >
+                Escenario {i + 1}
+              </button>
+            )
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={() => setDrawMode((v) => !v)}
+          aria-pressed={drawMode}
+          aria-label={drawMode ? 'Desactivar el lápiz' : 'Activar el lápiz'}
+          className={[
+            'w-11 rounded-xl border flex items-center justify-center transition-colors touch-manipulation',
+            drawMode
+              ? 'bg-bol-yellow border-bol-yellow text-black'
+              : 'bg-[#141414] border-[#2a2a2a] text-zinc-300 hover:text-white',
+          ].join(' ')}
+        >
+          <Pencil size={16} />
+        </button>
       </div>
+
+      {/* Herramientas del lápiz: color, deshacer y borrar */}
+      {drawMode && (
+        <div className="flex items-center gap-2 mb-3 shrink-0 px-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mr-1">Lápiz</span>
+          <div className="flex items-center gap-2 flex-1">
+            {STROKE_COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setPenColor(c)}
+                aria-label={`Color ${c}`}
+                aria-pressed={penColor === c}
+                className={[
+                  'w-7 h-7 rounded-full border-2 transition-transform touch-manipulation',
+                  penColor === c ? 'border-white scale-110' : 'border-[#3a3a3a]',
+                ].join(' ')}
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setBoard((b) => undoStroke(b))}
+            disabled={board.strokes.length === 0}
+            aria-label="Deshacer el último trazo"
+            className="w-9 h-8 rounded-lg bg-[#1f1f1f] text-zinc-300 hover:text-white flex items-center justify-center disabled:opacity-40 touch-manipulation"
+          >
+            <Undo2 size={15} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setBoard((b) => clearStrokes(b))}
+            disabled={board.strokes.length === 0}
+            aria-label="Borrar todo el dibujo"
+            className="w-9 h-8 rounded-lg bg-[#1f1f1f] text-zinc-300 hover:text-red-300 flex items-center justify-center disabled:opacity-40 touch-manipulation"
+          >
+            <Eraser size={15} />
+          </button>
+        </div>
+      )}
 
       {/* Campo: ocupa todo el alto que queda */}
       <div ref={areaRef} className="flex-1 min-h-0 flex items-center justify-center -mx-4 sm:mx-0">
         <div
           ref={pitchRef}
-          className={`relative rounded-xl overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.08)] select-none ${dragging ? 'cursor-grabbing' : ''}`}
+          className={`relative rounded-xl overflow-hidden select-none ${dragging ? 'cursor-grabbing' : ''} ${drawMode ? 'shadow-[0_0_0_2px_#F9E300]' : 'shadow-[0_0_0_1px_rgba(255,255,255,0.08)]'}`}
           style={{ width: size.w, height: size.h, touchAction: 'none' }}
         >
           <Pitch />
@@ -166,6 +230,13 @@ export default function TacticsBoard({ players }: TacticsBoardProps) {
                 toPercent={toPercent}
                 onMove={(x, y) => setBoard((b) => moveBall(b, x, y))}
                 onDragStateChange={setDragging}
+              />
+              <DrawingLayer
+                strokes={board.strokes}
+                active={drawMode}
+                color={penColor}
+                toPercent={toPercent}
+                onStroke={(stroke) => setBoard((b) => addStroke(b, stroke))}
               />
             </React.Fragment>
           )}
