@@ -72,10 +72,11 @@ interface PieceProps extends DragHandlers {
   player: Player | null
   /** Tamaño de la ficha en px (depende del ancho del campo) */
   size: number
+  showName?: boolean
   onTap?: () => void
 }
 
-export function Piece({ token, player, size, onTap, ...drag }: PieceProps) {
+export function Piece({ token, player, size, showName = true, onTap, ...drag }: PieceProps) {
   const handlers = useDrag(drag, onTap)
   const isOurs = token.side === 'ours'
   const isGk = token.role === 'POR'
@@ -89,7 +90,7 @@ export function Piece({ token, player, size, onTap, ...drag }: PieceProps) {
       : 'bg-white text-zinc-900'
 
   const ring = isOurs ? 'ring-black/70' : 'ring-zinc-900/60'
-  const label = player ? shortName(player) : null
+  const label = player && showName ? shortName(player) : null
   const aria = isOurs
     ? player
       ? `${player.name}, ficha ${token.label}`

@@ -22,14 +22,24 @@ export interface BoardToken {
   playerId: string | null
 }
 
+export interface BoardOptions {
+  /** Mostrar las fichas del rival (ocultarlas deja solo nuestra alineación) */
+  showRival: boolean
+  /** Nombre corto bajo las fichas con jugador */
+  showNames: boolean
+}
+
+export const DEFAULT_OPTIONS: BoardOptions = { showRival: true, showNames: true }
+
 export interface BoardState {
   tokens: BoardToken[]
   ball: { x: number; y: number }
   formation: Record<BoardSide, FormationKey>
+  options: BoardOptions
 }
 
 /** Campo de F7 en metros (ancho × largo); el dibujo usa estas proporciones */
-export const PITCH = { width: 45, length: 65 } as const
+export const PITCH = { width: 40, length: 65 } as const
 
 // Formaciones de F7: portero + 6 jugadores de campo. Posiciones en NUESTRA mitad
 // (y entre 50 y 100); para el rival se reflejan con `100 - y`.
@@ -107,7 +117,12 @@ export function initialBoard(): BoardState {
     ],
     ball: { x: 50, y: 50 },
     formation: { ...DEFAULT_FORMATION },
+    options: { ...DEFAULT_OPTIONS },
   }
+}
+
+export function setOption<K extends keyof BoardOptions>(state: BoardState, key: K, value: BoardOptions[K]): BoardState {
+  return { ...state, options: { ...state.options, [key]: value } }
 }
 
 /** Cambia la formación de un equipo recolocando sus fichas (los jugadores se mantienen) */
@@ -226,7 +241,8 @@ export function loadBoard(): BoardState | null {
     if (!FORMATION_KEYS.includes(parsed.formation.ours) || !FORMATION_KEYS.includes(parsed.formation.rival)) return null
     const expected = initialBoard().tokens.length
     if (parsed.tokens.length !== expected) return null
-    return parsed as BoardState
+    // Versiones anteriores no guardaban opciones
+    return { ...parsed, options: { ...DEFAULT_OPTIONS, ...parsed.options } } as BoardState
   } catch {
     return null
   }

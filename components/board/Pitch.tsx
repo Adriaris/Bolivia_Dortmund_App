@@ -9,7 +9,7 @@ export default function Pitch() {
   const L = PITCH.length
   const cx = W / 2
   // Medidas aproximadas de F7 (en metros)
-  const areaW = 27
+  const areaW = 24
   const areaD = 11
   const goalW = 6
   const goalD = 1.6
