@@ -19,7 +19,7 @@ const tabs = [
   { href: '/jugadores',      outline: HiOutlineUsers,         fill: HiUsers,         label: 'Plantilla'     },
 ]
 
-const HIDDEN_ON = ['/matches/']
+const HIDDEN_ON = ['/matches/', '/pizarra']
 
 const tabBase = 'flex-1 flex flex-col items-center gap-1 pt-2 pb-3 select-none touch-manipulation'
 

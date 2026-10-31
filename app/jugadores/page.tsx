@@ -1,8 +1,9 @@
 'use client'
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Loader2, Plus, UserMinus, UserPlus, X } from 'lucide-react'
+import { ClipboardList, Loader2, Plus, UserMinus, UserPlus, X } from 'lucide-react'
 import { getPlayers, createPlayer, getCurrentTournament, setPlayerGuest } from '@/lib/supabase/queries'
 import { getRegisteredPlayerIds } from '@/lib/auth'
 import { safeNextPath } from '@/lib/players'
@@ -214,15 +215,24 @@ function JugadoresContent() {
           <h1 className="text-xl font-black text-white tracking-tight leading-tight">Plantilla</h1>
           <p className="text-xs text-zinc-600 uppercase tracking-widest mt-0.5">Jugadores registrados</p>
         </div>
-        {isAdmin && (
-          <button
-            onClick={() => setShowForm((v) => !v)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white text-black text-sm font-bold hover:bg-zinc-100 transition-colors"
+        <div className="flex items-center gap-2">
+          <Link
+            href="/pizarra"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1f1f1f] border border-[#2a2a2a] text-zinc-200 text-sm font-bold hover:text-white hover:border-zinc-500 transition-colors"
           >
-            {showForm ? <X size={15} /> : <Plus size={15} />}
-            {showForm ? 'Cancelar' : 'Añadir'}
-          </button>
-        )}
+            <ClipboardList size={15} className="text-bol-yellow" />
+            Pizarra
+          </Link>
+          {isAdmin && (
+            <button
+              onClick={() => setShowForm((v) => !v)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white text-black text-sm font-bold hover:bg-zinc-100 transition-colors"
+            >
+              {showForm ? <X size={15} /> : <Plus size={15} />}
+              {showForm ? 'Cancelar' : 'Añadir'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Identidad del jugador en este móvil */}
